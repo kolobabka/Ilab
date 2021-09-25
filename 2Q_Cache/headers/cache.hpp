@@ -57,13 +57,13 @@ namespace caches {
         QueueMap<Key, Data> Hot {cacheSize / divPart};
 
 
-        void replace (QueueMap<Key, Data> &Cur, QueueMap<Key, Data> &Prev, MapIt page, whatList petya) {
+        void replace (QueueMap<Key, Data> &Cur, QueueMap<Key, Data> &Prev, MapIt page, whatList place) {
 
             auto back = Map.find(Cur.List.back().data);
             Map.erase(back);
             Cur.List.pop_back();
 
-            page->second->place = whatList (petya);
+            page->second->place = whatList (place);
             Cur.List.splice(Cur.List.begin(), Prev.List, page->second);
         }
 
