@@ -9,9 +9,9 @@ int main () {
     std::cin >> cacheSize >> numPages;
     assert(std::cin.good());
 
-    caches::Cache_2Q<std::string, std::string> Cache{cacheSize};
+    caches::Cache_2Q<int, int> Cache{cacheSize};
 
-    int result = Cache.CacheHit(numPages);
+    int result = CacheHit(Cache, numPages);
 
     std::cout << result << std::endl;
 }

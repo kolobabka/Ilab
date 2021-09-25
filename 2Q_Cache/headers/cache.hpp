@@ -21,8 +21,8 @@ template <typename Data> struct ListNode {
 //--------------------------------------------------------
 //--------------------------------------------------------
 namespace caches {
-    
-    template <typename Key, typename Data>  
+
+    template <typename Key, typename Data>
     struct QueueMap {
 
         const size_t sizeList;
@@ -32,16 +32,13 @@ namespace caches {
         QueueMap(const size_t size) : sizeList(size) {}
 
         bool IsFull () const {
-            
-            if (sizeList <= List.size ())
-                return true;
-            
-            return false;
+
+            return (sizeList <= List.size ());
         }
     };
 //--------------------------------------------------------
 //--------------------------------------------------------
-    template <typename Key, typename Data>  
+    template <typename Key, typename Data>
     struct Cache_2Q {
 
         const size_t cacheSize;
@@ -50,17 +47,14 @@ namespace caches {
 
         std::unordered_map<Key, ListIt> Map;
 
-        Cache_2Q (const size_t size) : 
-            cacheSize (size) {} 
-
-        ~Cache_2Q () {}
-
+        Cache_2Q (const size_t size) :
+            cacheSize (size) {}
 
         QueueMap<Key, Data> In {cacheSize - (3* (cacheSize / 5)) - (cacheSize / 5)};
         QueueMap<Key, Data> Out {3 * (cacheSize / 5)};
         QueueMap<Key, Data> Hot {cacheSize / 5};
 
-        
+
 //--------------------------------------------------------
 //--------------------------------------------------------
         void InsertPage (ListNode<Data> node) {
@@ -70,7 +64,7 @@ namespace caches {
                 auto backList = Map.find(In.List.back().data);
 
                 if (!Out.IsFull ()) {
-                
+
                     backList->second->place = OUT;
                     Out.List.splice(Out.List.begin(), In.List, backList->second);
 
@@ -108,12 +102,12 @@ namespace caches {
 
         }
 //--------------------------------------------------------
-//--------------------------------------------------------        
-        void FindPage (typename std::unordered_map<Key, ListIt>::iterator page) {
+//--------------------------------------------------------
+        void InCache (typename std::unordered_map<Key, ListIt>::iterator page) {
 
-            if (page->second->place == IN)     
+            if (page->second->place == IN)
                 return;
-                    
+
             if (page->second->place == OUT) {
 
                 if (!Hot.IsFull ()) {
@@ -131,7 +125,7 @@ namespace caches {
 
                     page->second->place = HOT;
                     Hot.List.splice(Hot.List.begin(), Out.List, page->second);
- 
+
                     return;
                 }
             }
@@ -143,37 +137,43 @@ namespace caches {
         }
 //--------------------------------------------------------
 //--------------------------------------------------------
-        int CacheHit (const size_t numPages) {
+        bool LookUp (Data data) {
 
-            int numHit = 0;
+          auto page = Map.find (data);
 
-            for (size_t i = 0; i < numPages; i++) {
+          if (page == Map.end ()) {
 
-                Data data;
-                std::cin >> data;
-                assert (std::cin.good ());
-                
-                auto page = Map.find (data);
+              ListNode<Data>node = {data, IN};
+              InsertPage (node);
+              return false;
+          }
+          else {
 
-                if (page == Map.end ()) {
-                    
-                    ListNode<Data>node = {data, IN};
-                    InsertPage (node);
-                }
-                else {
-
-                    FindPage (page);
-                    numHit++;
-                }
-
-            }
-
-        return numHit;
+              InCache (page);
+              return true;
+          }
         }
     };
 }
 //--------------------------------------------------------
 //--------------------------------------------------------
+template <typename Key, typename Data>
+int CacheHit (caches::Cache_2Q<Key, Data> Cache, const size_t numPages) {
 
+    int numHit = 0;
 
+    for (size_t i = 0; i < numPages; i++) {
 
+        Data data;
+        std::cin >> data;
+        assert (std::cin.good ());
+
+        if (Cache.LookUp(data))
+            ++numHit;
+
+    }
+
+    return numHit;
+}
+//--------------------------------------------------------
+//--------------------------------------------------------
