@@ -6,7 +6,7 @@ set (EXECSOURCES source/main.cpp) # SOURCES *.cpp
 set (TESTSOURCES test/unTests.cpp)
 set (HEADERS headers/cache.hpp)                 # HEADERS *.hpp
 
-set (COMPILER_SETTINGS -Wall -Wextra -O2)       # COMPILER SETTINGS
+set (COMPILER_SETTINGS -Wall -Wextra -O3)       # COMPILER SETTINGS
 
 add_compile_options (${COMPILER_SETTINGS})
 add_executable (cache ${EXECSOURCES})

@@ -13,6 +13,10 @@ enum whatList{
 };
 //--------------------------------------------------------
 //--------------------------------------------------------
+const int multPart = 3;
+const int divPart  = 5;
+//--------------------------------------------------------
+//--------------------------------------------------------
 template <typename Data> struct ListNode {
 
     Data data;
@@ -39,71 +43,32 @@ namespace caches {
 //--------------------------------------------------------
 //--------------------------------------------------------
     template <typename Key, typename Data>
-    struct Cache_2Q {
+    class Cache_2Q {
 
+    private: 
         const size_t cacheSize;
-
         using ListIt = typename std::list<ListNode<Data>>::iterator;
+        using MapIt  = typename std::unordered_map<Key, ListIt>::iterator;
 
         std::unordered_map<Key, ListIt> Map;
 
-        Cache_2Q (const size_t size) :
-            cacheSize (size) {}
-
-        QueueMap<Key, Data> In {cacheSize - (3* (cacheSize / 5)) - (cacheSize / 5)};
-        QueueMap<Key, Data> Out {3 * (cacheSize / 5)};
-        QueueMap<Key, Data> Hot {cacheSize / 5};
+        QueueMap<Key, Data> In {cacheSize - (multPart * (cacheSize / divPart)) - (cacheSize / divPart)};
+        QueueMap<Key, Data> Out {multPart * (cacheSize / divPart)};
+        QueueMap<Key, Data> Hot {cacheSize / divPart};
 
 
-//--------------------------------------------------------
-//--------------------------------------------------------
-        void InsertPage (ListNode<Data> node) {
+        void replace (QueueMap<Key, Data> &Cur, QueueMap<Key, Data> &Prev, MapIt page, whatList petya) {
 
-            if (In.IsFull ()) {
+            auto back = Map.find(Cur.List.back().data);
+            Map.erase(back);
+            Cur.List.pop_back();
 
-                auto backList = Map.find(In.List.back().data);
-
-                if (!Out.IsFull ()) {
-
-                    backList->second->place = OUT;
-                    Out.List.splice(Out.List.begin(), In.List, backList->second);
-
-                }
-                else {
-
-                    if (Out.List.size () == 0) {
-
-                        Map.erase (backList);
-                        In.List.pop_back();
-                        In.List.push_front (node);
-                        Map.insert({node.data, In.List.begin()});
-
-                        return;
-                    }
-
-                    auto backOut = Map.find(Out.List.back().data);
-                    Map.erase(backOut);
-                    Out.List.pop_back();
-
-                    backList->second->place = OUT;
-                    Out.List.splice(Out.List.begin(), In.List, backList->second);
-
-                }
-
-                In.List.push_front (node);
-                Map.insert({node.data, In.List.begin()});
-
-            }
-            else {
-
-                In.List.push_front (node);
-                Map.insert({node.data, In.List.begin()});
-            }
-
+            page->second->place = whatList (petya);
+            Cur.List.splice(Cur.List.begin(), Prev.List, page->second);
         }
-//--------------------------------------------------------
-//--------------------------------------------------------
-        void InCache (typename std::unordered_map<Key, ListIt>::iterator page) {
+
+
+        void InCache (MapIt page) {
 
             if (page->second->place == IN)
                 return;
@@ -119,24 +84,56 @@ namespace caches {
                 }
                 else {
 
-                    auto backHot = Map.find(Hot.List.back().data);
-                    Map.erase(backHot);
-                    Hot.List.pop_back();
-
-                    page->second->place = HOT;
-                    Hot.List.splice(Hot.List.begin(), Out.List, page->second);
-
+                    replace (Hot, Out, page, HOT);
                     return;
                 }
             }
+            
             if (page->second->place == HOT) {
 
                 Hot.List.splice(Hot.List.begin(), Hot.List, page->second);
                 return;
             }
         }
-//--------------------------------------------------------
-//--------------------------------------------------------
+
+
+    public:
+
+        Cache_2Q (const size_t size) :
+            cacheSize (size) {}
+
+
+        void InsertPage (ListNode<Data> node) {
+
+            if (In.IsFull ()) {
+
+                auto backList = Map.find(In.List.back().data);
+
+                if (!Out.IsFull ()) {
+
+                    backList->second->place = OUT;
+                    Out.List.splice(Out.List.begin(), In.List, backList->second);
+                }
+                else {
+
+                    if (Out.List.size () == 0) {
+
+                        Map.erase (backList);
+                        In.List.pop_back();                     
+                    }
+                    else {
+                        
+                        replace (Out, In, backList, OUT);
+                    }
+                }
+            }
+
+            In.List.push_front (node);
+            Map.insert({node.data, In.List.begin()});
+        }
+
+
+
         bool LookUp (Data data) {
 
           auto page = Map.find (data);
@@ -147,12 +144,13 @@ namespace caches {
               InsertPage (node);
               return false;
           }
+
           else {
 
               InCache (page);
               return true;
           }
-        }
+        }        
     };
 }
 //--------------------------------------------------------
@@ -170,7 +168,6 @@ int CacheHit (caches::Cache_2Q<Key, Data> Cache, const size_t numPages) {
 
         if (Cache.LookUp(data))
             ++numHit;
-
     }
 
     return numHit;
