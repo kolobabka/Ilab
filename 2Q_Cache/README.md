@@ -7,7 +7,7 @@
 ```
 ---
 ---
-### In a folder 'build' will files 'cache', 'unTest' and 'belady' appear executing a programm, her tests and Belady's algorithm respectively 
+### In a folder 'build' files 'cache', 'unTest' and 'belady' will appear executing a programm, her tests and Belady's algorithm respectively 
 ---
 ---
 ---
