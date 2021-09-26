@@ -97,12 +97,6 @@ namespace caches {
         }
 
 
-    public:
-
-        Cache_2Q (const size_t size) :
-            cacheSize (size) {}
-
-
         void InsertPage (ListNode<Data> node) {
 
             if (In.IsFull ()) {
@@ -132,7 +126,9 @@ namespace caches {
             Map.insert({node.data, In.List.begin()});
         }
 
-
+    public:
+        Cache_2Q (const size_t size) :
+            cacheSize (size) {}
 
         bool LookUp (Data data) {
 
