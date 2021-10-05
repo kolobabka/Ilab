@@ -2,10 +2,14 @@
 #include <new>
 #include <iterator>
 #include <cassert>
+#include <algorithm>
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 namespace objects {
     
+    //##############################################################################
+    //                              VECTOR-CLASS PART
+    //############################################################################## 
 
     template <typename PType> class Vector {
 
@@ -15,7 +19,6 @@ namespace objects {
         PType z_;
     
     public:
-
         Vector (PType x = 0, PType y = 0, PType z = 0) :
 
             x_(x),
@@ -58,7 +61,9 @@ namespace objects {
             return *this;
         }
     };
-
+    //##############################################################################
+    //                         VECTOR-OVERLOAD PART
+    //##############################################################################
     template <typename PType> 
     std::istream &operator >> (std::istream &in, Vector<PType> &point) {
 
@@ -134,7 +139,9 @@ namespace objects {
 
         return Vector<PType> (x, y, z);
     }
-
+    //##############################################################################
+    //                         TRIANGLE-CLASS PART
+    //##############################################################################
     template <typename PType> class Triangle {
 
     private:
@@ -168,8 +175,15 @@ namespace objects {
             return rVec3_;
         }
 
+        PType MaxCoord () {
+            return (std::max ({(const PType) std::abs(rVec1_.GetPointX()), (const PType) std::abs(rVec1_.GetPointY()), (const PType) std::abs(rVec1_.GetPointZ()), 
+                              (const PType) std::abs(rVec2_.GetPointX()), (const PType) std::abs(rVec2_.GetPointY()), (const PType) std::abs(rVec2_.GetPointZ()), 
+                              (const PType) std::abs(rVec3_.GetPointX()), (const PType) std::abs(rVec3_.GetPointY()), (const PType) std::abs(rVec3_.GetPointZ())}));
+        }
     };
-
+    //##############################################################################
+    //                         TRIANGLE-OVERLOAD PART
+    //##############################################################################
     template <typename PType> 
     std::istream &operator >> (std::istream &in, Triangle<PType> &triangle) {
 
@@ -194,7 +208,70 @@ namespace objects {
 
         return out;
     }
+    //##############################################################################
+    //                         OCTREE-CLASS PART
+    //##############################################################################
+    template <typename PType>
+    
 }
 
 
+//##############################################################################
+//                         IMPLEMENTATION PART
+//##############################################################################
+template <typename PType> PType GetTriangles (objects::Triangle<PType>* Triangles, int number);
+template <typename PType> void DumpTriangles (objects::Triangle<PType>* Triangles, int number);
+template <typename PType> long long IntersectCount ();
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+long long IntersectCount () {
 
+    int number = 0;
+    std::cin >> number;
+    assert (std::cin.good());
+
+    objects::Triangle<PType>* Triangles = new objects::Triangle<PType> [number];
+
+    PType max = GetTriangles (Triangles, number);
+    DumpTriangles (Triangles, number);
+
+    std::cout << "Max coord is " << max << std::endl;
+
+    return 10;   
+}
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+PType GetTriangles (objects::Triangle<PType>* Triangles, int number) {
+
+    assert (Triangles);
+    PType max = 0;
+
+    for (int index = 0; index < number; ++index) { 
+
+        std::cin >> Triangles[index];
+        assert (std::cin.good());
+
+        if (Triangles[index].MaxCoord() > max)
+            max = Triangles[index].MaxCoord();
+        
+        assert(std::cin.good());
+    }
+    
+    return max;
+}
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+void DumpTriangles (objects::Triangle<PType>* Triangles, int number) {
+
+    assert (Triangles);
+
+    for (int index = 0; index < number; ++index) { 
+
+        std::cout << "\t\t\t####### " << index + 1 << std::endl;
+        std::cout << Triangles[index];
+        
+    }
+}

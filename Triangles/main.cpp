@@ -1,23 +1,13 @@
 #include "triangles.hpp"
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
 int main () {
-
-    objects::Vector<double> vec1{};
-    objects::Vector<double> vec2{}; 
     
-    objects::Triangle<double> triangle{};
-
-    std::cin >> triangle;
-
-    objects::Vector<double> vec = 4.0 * triangle.GetVec1();
-
-    vec =  2* (-vec);
-
-    vec = (-vec) / 2;
-
-    std::cout << triangle;
-
-    std::cout << vec;
+    long long result = IntersectCount<double> ();
+    std::cout << "result =" << result << std::endl;
 
     return 0;
 }
