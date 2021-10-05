@@ -3,6 +3,7 @@
 #include <iterator>
 #include <cassert>
 #include <algorithm>
+#include <list>
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 namespace objects {
@@ -208,19 +209,50 @@ namespace objects {
 
         return out;
     }
+}
     //##############################################################################
     //                         OCTREE-CLASS PART
-    //##############################################################################
-    template <typename PType>
-    
+    //##############################################################################  
+namespace tree {
+
+    template <typename PType> struct Cube {
+
+        // objects::Vector<PType> rVec_1[8];
+
+        objects::Vector<PType> rMinVec_;
+        objects::Vector<PType> rMaxVec_;
+
+    public:
+        Cube (objects::Vector<PType>& rMinVec, objects::Vector<PType>& rMaxVec) :
+
+            rMinVec_(rMinVec),
+            rMaxVec_(rMaxVec) {};
+
+    };
+
+    template <typename PType> struct Octree {
+
+        Octree* childs_[8]{};
+        
+        std::list<objects::Triangle<PType>> Triangles_;
+        Cube<PType> space_;
+
+    public:
+        Octree (objects::Vector<PType> rMinVecs, objects::Vector<PType> rMaxVecs) :
+
+            space_{rMinVecs, rMaxVecs} {};
+
+        ~Octree () {};
+    };
+        
 }
 
 
 //##############################################################################
 //                         IMPLEMENTATION PART
 //##############################################################################
-template <typename PType> PType GetTriangles (objects::Triangle<PType>* Triangles, int number);
-template <typename PType> void DumpTriangles (objects::Triangle<PType>* Triangles, int number);
+template <typename PType> PType GetTriangles (tree::Octree<PType> &octree, int number);
+// template <typename PType> void DumpTriangles (std::list<objects::Triangle<PType>>* Triangles, int number);
 template <typename PType> long long IntersectCount ();
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
@@ -231,47 +263,66 @@ long long IntersectCount () {
     std::cin >> number;
     assert (std::cin.good());
 
-    objects::Triangle<PType>* Triangles = new objects::Triangle<PType> [number];
+    tree::Octree<PType> octree{{0,0,0}, {0,0,0}};
 
-    PType max = GetTriangles (Triangles, number);
-    DumpTriangles (Triangles, number);
+    PType max = GetTriangles (octree, number);
 
     std::cout << "Max coord is " << max << std::endl;
+
+    
+    for (auto u : octree.Triangles_)
+        std::cout << u;
+    
+    for (int i = 0; i < 8; ++i)
+        std::cout << octree.childs_[i] << " ";
+
+    std::cout << std::endl;
+    std::cout << "Min:\n" << octree.space_.rMinVec_;
+    std::cout << "Max:\n" << octree.space_.rMaxVec_;
+    std::cout << "Size " << sizeof (octree);
 
     return 10;   
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 template <typename PType>
-PType GetTriangles (objects::Triangle<PType>* Triangles, int number) {
+PType GetTriangles (tree::Octree<PType> &octree, int number) {
 
-    assert (Triangles);
     PType max = 0;
 
     for (int index = 0; index < number; ++index) { 
 
-        std::cin >> Triangles[index];
+        objects::Triangle<PType> triangle;
+
+        std::cin >> triangle;
         assert (std::cin.good());
 
-        if (Triangles[index].MaxCoord() > max)
-            max = Triangles[index].MaxCoord();
-        
-        assert(std::cin.good());
+        octree.Triangles_.push_back(triangle);
+
+        if (triangle.MaxCoord() > max)
+            max = triangle.MaxCoord();
     }
+
+    octree.space_.rMaxVec_.SetPointX( max);
+    octree.space_.rMaxVec_.SetPointY( max);
+    octree.space_.rMaxVec_.SetPointZ( max);
+    octree.space_.rMinVec_.SetPointX(-max);
+    octree.space_.rMinVec_.SetPointY(-max);
+    octree.space_.rMinVec_.SetPointZ(-max);
     
     return max;
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-template <typename PType>
-void DumpTriangles (objects::Triangle<PType>* Triangles, int number) {
+// template <typename PType>
+// void DumpTriangles (std::list<objects::Triangle<PType>>* Triangles, int number) {
 
-    assert (Triangles);
+//     int index = 1;
 
-    for (int index = 0; index < number; ++index) { 
+//     for (auto v: *Triangles) {
 
-        std::cout << "\t\t\t####### " << index + 1 << std::endl;
-        std::cout << Triangles[index];
-        
-    }
-}
+//         std::cout << "\t\t\t#####Index " << index << std::endl;  
+//         std::cout << v;
+//         ++index;
+//     }
+// }
