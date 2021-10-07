@@ -4,6 +4,7 @@
 #include <cassert>
 #include <algorithm>
 #include <list>
+#include <cmath>
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 namespace objects {
@@ -15,49 +16,39 @@ namespace objects {
     template <typename PType> class Vector {
 
     private:
-        PType x_;
-        PType y_;
-        PType z_;
+        
+
+        PType points_[3]{};
     
     public:
-        Vector (PType x = 0, PType y = 0, PType z = 0) :
+        Vector (PType x = 0, PType y = 0, PType z = 0) {
 
-            x_(x),
-            y_(y),
-            z_(z) {}
+            points_[0] = x;
+            points_[1] = y;
+            points_[2] = z;
+        }
 
-        void SetPointX (PType x) {
-            x_ = x;
+        void SetPoint (PType point, int num) {
+
+            points_[num] = point;
         }
-        void SetPointY (PType y) {
-            y_ = y;
-        }
-        void SetPointZ (PType z) {
-            z_ = z;
-        }
-        PType GetPointX () const {
-            return x_;
-        }
-        PType GetPointY () const {
-            return y_;
-        }
-        PType GetPointZ () const {
-            return z_;
+
+        PType GetPoint (int num) const {
+
+            return points_[num];
         }
     
         Vector<PType> &operator += (const Vector<PType>& vec) {
-            
-            x_ += vec.GetPointX();
-            y_ += vec.GetPointY();
-            z_ += vec.GetPointZ();
+
+            for (int i = 0; i < 3; ++i)
+                points_[i] += vec.points_[i];
 
             return *this;
         }
         Vector<PType> &operator -= (const Vector<PType>& vec) {
-            
-            x_ -= vec.GetPointX();
-            y_ -= vec.GetPointY();
-            z_ -= vec.GetPointZ();
+
+            for (int i = 0; i < 3; ++i)
+                points_[i] -= vec.points_[i];
 
             return *this;
         }
@@ -71,75 +62,83 @@ namespace objects {
         PType x, y, z;
         in >> x >> y >> z;
 
-        point.SetPointX(x); 
-        point.SetPointY(y); 
-        point.SetPointZ(z);
+        point.SetPoint(x, 0); 
+        point.SetPoint(y, 1); 
+        point.SetPoint(z, 2);
 
         return in;
     }
     template <typename PType>
     std::ostream &operator << (std::ostream &out, const Vector<PType> &point) {
 
-        out << "X = " << point.GetPointX() << std::endl; 
-        out << "Y = " << point.GetPointY() << std::endl; 
-        out << "Z = " << point.GetPointZ() << std::endl; 
+        out << "X = " << point.GetPoint(0) << std::endl; 
+        out << "Y = " << point.GetPoint(1) << std::endl; 
+        out << "Z = " << point.GetPoint(2) << std::endl; 
 
         return out;
     }
     template <typename PType>
     Vector<PType> operator + (const Vector<PType>& vec1, const Vector<PType>& vec2) {
             
-        PType x = vec1.GetPointX () + vec2.GetPointX ();
-        PType y = vec1.GetPointY () + vec2.GetPointY ();
-        PType z = vec1.GetPointY () + vec2.GetPointY ();
+        PType x = vec1.GetPoint(0) + vec2.GetPoint(0);
+        PType y = vec1.GetPoint(1) + vec2.GetPoint(1);
+        PType z = vec1.GetPoint(2) + vec2.GetPoint(2);
 
         return Vector<PType> (x, y, z);
     }
     template <typename PType>
     Vector<PType> operator - (const Vector<PType>& vec1, const Vector<PType>& vec2) {
             
-        PType x = vec1.GetPointX () - vec2.GetPointX ();
-        PType y = vec1.GetPointY () - vec2.GetPointY ();
-        PType z = vec1.GetPointY () - vec2.GetPointY ();
+        PType x = vec1.GetPoint(0) - vec2.GetPoint(0);
+        PType y = vec1.GetPoint(1) - vec2.GetPoint(1);
+        PType z = vec1.GetPoint(2) - vec2.GetPoint(2);
 
         return Vector<PType> (x, y, z);
     }
     template <typename PType>
     Vector<PType> operator * (const Vector<PType>& vec1, const float num) {
             
-        PType x = vec1.GetPointX () * num;
-        PType y = vec1.GetPointY () * num;
-        PType z = vec1.GetPointZ () * num;
+        PType x = vec1.GetPoint(0) * num;
+        PType y = vec1.GetPoint(1) * num;
+        PType z = vec1.GetPoint(2) * num;
 
         return Vector<PType> (x, y, z);
     }
     template <typename PType>
     Vector<PType> operator * (const float num, const Vector<PType>& vec1) {
             
-        PType x = vec1.GetPointX () * num;
-        PType y = vec1.GetPointY () * num;
-        PType z = vec1.GetPointZ () * num;
+        PType x = vec1.GetPoint(0) * num;
+        PType y = vec1.GetPoint(1) * num;
+        PType z = vec1.GetPoint(2) * num;
 
         return Vector<PType> (x, y, z);
     }
     template <typename PType>
     Vector<PType> operator/ (const Vector<PType>& vec1, const float num) {
             
-        PType x = vec1.GetPointX () / num;
-        PType y = vec1.GetPointY () / num;
-        PType z = vec1.GetPointZ () / num;
+        PType x = vec1.GetPoint(0) / num;
+        PType y = vec1.GetPoint(1) / num;
+        PType z = vec1.GetPoint(2) / num;
 
         return Vector<PType> (x, y, z);
     }
     template <typename PType>
     Vector<PType> operator - (const Vector<PType>& vec1) {
             
-        PType x = -vec1.GetPointX ();
-        PType y = -vec1.GetPointY ();
-        PType z = -vec1.GetPointZ ();
+        PType x = -vec1.GetPoint(0);
+        PType y = -vec1.GetPoint(1);
+        PType z = -vec1.GetPoint(2);
 
         return Vector<PType> (x, y, z);
     }
+    template <typename PType>
+    PType ScalarProduct (const Vector<PType>& vec1, const Vector<PType>& vec2) {
+
+        return ((vec1.GetPoint(0) * vec2.GetPoint(0)) + 
+            (vec1.GetPoint(1) * vec2.GetPoint(1)) +
+            (vec1.GetPoint(2) * vec2.GetPoint(2)));
+    }
+
     //##############################################################################
     //                         TRIANGLE-CLASS PART
     //##############################################################################
@@ -150,36 +149,33 @@ namespace objects {
         Vector<PType> rVec2_;
         Vector<PType> rVec3_;
 
+        Vector<PType> rVecs_[3]{};
+
     public:
-        Triangle () :
+        
+        void SetVec (Vector<PType> &vec, int num) { 
+            if (num < 0 || num >= 3) {
 
-            rVec1_{0, 0, 0},
-            rVec2_{0, 0, 0},
-            rVec3_{0, 0, 0} {}
+                std::cout << "Wrong number!" << std::endl;
+                return;
+            }
+            rVecs_[num] = vec;
+        }
 
-        void SetVec1 (Vector<PType> &vec1) {
-            rVec1_ = vec1;
-        }
-        void SetVec2 (Vector<PType> &vec2) {
-            rVec2_ = vec2;
-        }
-        void SetVec3 (Vector<PType> &vec3) {
-            rVec3_ = vec3;
-        }
-        Vector<PType> GetVec1 () const {
-            return rVec1_;
-        }
-        Vector<PType> GetVec2 () const {
-            return rVec2_;
-        }
-        Vector<PType> GetVec3 () const {
-            return rVec3_;
+        Vector<PType> GetVec (int num) const{ 
+            if (num < 0 || num >= 3) {
+
+                std::cout << "Wrong number!" << std::endl;
+                return rVecs_[0];
+            }
+            return rVecs_[num];
         }
 
         PType MaxCoord () {
-            return (std::max ({(const PType) std::abs(rVec1_.GetPointX()), (const PType) std::abs(rVec1_.GetPointY()), (const PType) std::abs(rVec1_.GetPointZ()), 
-                              (const PType) std::abs(rVec2_.GetPointX()), (const PType) std::abs(rVec2_.GetPointY()), (const PType) std::abs(rVec2_.GetPointZ()), 
-                              (const PType) std::abs(rVec3_.GetPointX()), (const PType) std::abs(rVec3_.GetPointY()), (const PType) std::abs(rVec3_.GetPointZ())}));
+
+            return (std::max ({(const PType) std::abs(rVecs_[0].GetPoint(0)), (const PType) std::abs(rVecs_[0].GetPoint(1)), (const PType) std::abs(rVecs_[0].GetPoint(2)), 
+                              (const PType) std::abs(rVecs_[1].GetPoint(0)), (const PType) std::abs(rVecs_[1].GetPoint(1)), (const PType) std::abs(rVecs_[1].GetPoint(2)), 
+                              (const PType) std::abs(rVecs_[2].GetPoint(0)), (const PType) std::abs(rVecs_[2].GetPoint(1)), (const PType) std::abs(rVecs_[2].GetPoint(2))}));
         }
     };
     //##############################################################################
@@ -194,18 +190,18 @@ namespace objects {
 
         in >> vec1 >> vec2 >> vec3;
 
-        triangle.SetVec1(vec1); 
-        triangle.SetVec2(vec2); 
-        triangle.SetVec3(vec3);
+        triangle.SetVec(vec1, 0); 
+        triangle.SetVec(vec2, 1); 
+        triangle.SetVec(vec3, 2);
 
         return in;
     }
     template <typename PType> 
     std::ostream &operator << (std::ostream &out, const Triangle<PType> &triangle) {
 
-        out << "First: " << std::endl << triangle.GetVec1() << std::endl;
-        out << "Second: " << std::endl << triangle.GetVec2() << std::endl;
-        out << "Third: " << std::endl << triangle.GetVec3() << std::endl;
+        out << "First: " << std::endl << triangle.GetVec(0) << std::endl;
+        out << "Second: " << std::endl << triangle.GetVec(1) << std::endl;
+        out << "Third: " << std::endl << triangle.GetVec(2) << std::endl;
 
         return out;
     }
@@ -217,8 +213,6 @@ namespace tree {
 
     template <typename PType> struct Cube {
 
-        // objects::Vector<PType> rVec_1[8];
-
         objects::Vector<PType> rMinVec_;
         objects::Vector<PType> rMaxVec_;
 
@@ -227,7 +221,6 @@ namespace tree {
 
             rMinVec_(rMinVec),
             rMaxVec_(rMaxVec) {};
-
     };
 
     template <typename PType> struct Octree {
@@ -252,10 +245,37 @@ namespace tree {
 //                         IMPLEMENTATION PART
 //##############################################################################
 template <typename PType> PType GetTriangles (tree::Octree<PType> &octree, int number);
-// template <typename PType> void DumpTriangles (std::list<objects::Triangle<PType>>* Triangles, int number);
 template <typename PType> long long IntersectCount ();
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
+template <typename PType>
+int TrWhereIs (objects::Triangle<PType> &triangle, tree::Cube<PType> &space) {
+
+    PType center = (space.rMinVec_.GetPoint(0) + space.rMaxVec_.GetPoint(0)) / 2; 
+
+    int whereis[3]{};
+
+    for (int i = 0; i < 3; ++i) {
+
+        for (int j = 0; j < 3; ++j) {
+
+            std::cout << "GetVec(" << i << ").GetPoint(" << j << ") = " << triangle.GetVec(i).GetPoint(j) << std::endl;
+            std::cout << "Center = " << center << std::endl;
+            if (triangle.GetVec(i).GetPoint(j) > center)
+                whereis[i] |= 1 << j;
+            
+            else if (triangle.GetVec(i).GetPoint(j) == center)
+                return -1;
+        }
+
+        if (i) 
+            if (whereis[i] != whereis[i - 1])  
+                return -1;
+    }
+
+    return whereis[0];    
+}
+
 template <typename PType>
 long long IntersectCount () {
 
@@ -268,8 +288,7 @@ long long IntersectCount () {
     PType max = GetTriangles (octree, number);
 
     std::cout << "Max coord is " << max << std::endl;
-
-    
+  
     for (auto u : octree.Triangles_)
         std::cout << u;
     
@@ -279,9 +298,34 @@ long long IntersectCount () {
     std::cout << std::endl;
     std::cout << "Min:\n" << octree.space_.rMinVec_;
     std::cout << "Max:\n" << octree.space_.rMaxVec_;
-    std::cout << "Size " << sizeof (octree);
+    std::cout << "Size " << sizeof (octree) << std::endl;
+
+    objects::Vector<PType> vexxx{-4, -4, -4};
+    objects::Vector<PType> veccc{4, 4, 4};
+
+    int test = 0;
+
+    tree::Cube<PType> cube{vexxx, veccc};
+
+    DivideSpace (octree);
+
+    std::cout << veccc;
+    test = TrWhereIs (octree.Triangles_.front(), cube);
+
+    std::cout << test << std::endl;
+
+    std::cout << true << std::endl;
+
+    std::cout << objects::ScalarProduct (vexxx, veccc) << std::endl;
 
     return 10;   
+}
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+void DivideSpace (tree::Octree<PType>& octree) {
+
+    
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
@@ -303,26 +347,13 @@ PType GetTriangles (tree::Octree<PType> &octree, int number) {
             max = triangle.MaxCoord();
     }
 
-    octree.space_.rMaxVec_.SetPointX( max);
-    octree.space_.rMaxVec_.SetPointY( max);
-    octree.space_.rMaxVec_.SetPointZ( max);
-    octree.space_.rMinVec_.SetPointX(-max);
-    octree.space_.rMinVec_.SetPointY(-max);
-    octree.space_.rMinVec_.SetPointZ(-max);
+    for (int i = 0; i < 3; ++i) {
+
+        octree.space_.rMaxVec_.SetPoint(max, i);
+        octree.space_.rMinVec_.SetPoint(-max, i);
+    }
     
     return max;
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-// template <typename PType>
-// void DumpTriangles (std::list<objects::Triangle<PType>>* Triangles, int number) {
-
-//     int index = 1;
-
-//     for (auto v: *Triangles) {
-
-//         std::cout << "\t\t\t#####Index " << index << std::endl;  
-//         std::cout << v;
-//         ++index;
-//     }
-// }
