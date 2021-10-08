@@ -244,7 +244,10 @@ namespace tree {
 //##############################################################################
 //                         IMPLEMENTATION PART
 //##############################################################################
+template <typename PType>
+void AddTriangle (tree::Octree<PType>& octree, typename std::list<objects::Triangle<PType>>::iterator Tr, int whereIs);
 template <typename PType> PType GetTriangles (tree::Octree<PType> &octree, int number);
+template <typename PType> void DumpTree (tree::Octree<PType> &octree);
 template <typename PType> long long IntersectCount ();
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
@@ -259,8 +262,6 @@ int TrWhereIs (objects::Triangle<PType> &triangle, tree::Cube<PType> &space) {
 
         for (int j = 0; j < 3; ++j) {
 
-            std::cout << "GetVec(" << i << ").GetPoint(" << j << ") = " << triangle.GetVec(i).GetPoint(j) << std::endl;
-            std::cout << "Center = " << center << std::endl;
             if (triangle.GetVec(i).GetPoint(j) > center)
                 whereis[i] |= 1 << j;
             
@@ -275,7 +276,70 @@ int TrWhereIs (objects::Triangle<PType> &triangle, tree::Cube<PType> &space) {
 
     return whereis[0];    
 }
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+void DivideSpace (tree::Octree<PType>& octree) {
 
+    if (octree.Triangles_.size() <= 2)
+        return;
+
+    using ListIt = typename std::list<objects::Triangle<PType>>::iterator;
+
+    ListIt listCur = octree.Triangles_.begin();
+
+    ListIt listEnd = octree.Triangles_.end();
+
+    while (listCur != listEnd) {
+
+        ListIt listNext = listCur;
+        ++listNext;
+
+        int whereIs = TrWhereIs (*listCur, octree.space_);  
+    
+        if (whereIs == -1) {
+
+            ++listCur;
+            continue;  
+        }
+
+        AddTriangle (octree, listCur, whereIs);
+        octree.Triangles_.erase(listCur);
+
+        listCur = listNext;
+    }
+
+    for (int index = 0; index < 8; ++index) {
+        
+        if (octree.childs_[index])
+            DivideSpace (*(octree.childs_[index]));
+    }
+}
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+void AddTriangle (tree::Octree<PType>& octree, typename std::list<objects::Triangle<PType>>::iterator Tr, int whereIs) {
+
+    if (octree.childs_[whereIs] == nullptr) 
+        octree.childs_[whereIs] = new tree::Octree<PType>{{0,0,0}, {0,0,0}};
+    
+    tree::Octree<PType>* child = octree.childs_[whereIs];
+
+    child->Triangles_.push_back(*Tr);
+    child->space_.rMinVec_ = octree.space_.rMinVec_;
+    child->space_.rMaxVec_ = octree.space_.rMaxVec_;
+
+    for (int index = 0; index < 3; ++index) {
+
+        if (((whereIs >> index) & 1u)) 
+            child->space_.rMinVec_.SetPoint((octree.space_.rMinVec_.GetPoint(index) + octree.space_.rMaxVec_.GetPoint(index)) / 2, index);
+        
+        if (!((whereIs >> index) & 1u))
+            child->space_.rMaxVec_.SetPoint((octree.space_.rMinVec_.GetPoint(index) + octree.space_.rMaxVec_.GetPoint(index)) / 2, index);
+    }
+}
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
 template <typename PType>
 long long IntersectCount () {
 
@@ -285,47 +349,25 @@ long long IntersectCount () {
 
     tree::Octree<PType> octree{{0,0,0}, {0,0,0}};
 
-    PType max = GetTriangles (octree, number);
-
-    std::cout << "Max coord is " << max << std::endl;
-  
-    for (auto u : octree.Triangles_)
-        std::cout << u;
-    
-    for (int i = 0; i < 8; ++i)
-        std::cout << octree.childs_[i] << " ";
-
-    std::cout << std::endl;
-    std::cout << "Min:\n" << octree.space_.rMinVec_;
-    std::cout << "Max:\n" << octree.space_.rMaxVec_;
-    std::cout << "Size " << sizeof (octree) << std::endl;
+    GetTriangles (octree, number);
 
     objects::Vector<PType> vexxx{-4, -4, -4};
     objects::Vector<PType> veccc{4, 4, 4};
 
-    int test = 0;
-
     tree::Cube<PType> cube{vexxx, veccc};
+    
 
     DivideSpace (octree);
 
-    std::cout << veccc;
-    test = TrWhereIs (octree.Triangles_.front(), cube);
+    std::cout << std::endl;
 
-    std::cout << test << std::endl;
+    DumpTree (octree);
 
-    std::cout << true << std::endl;
-
-    std::cout << objects::ScalarProduct (vexxx, veccc) << std::endl;
+    // DeleteTree (octree);
+    
+    std::cout << std::endl;
 
     return 10;   
-}
-//-----------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------
-template <typename PType>
-void DivideSpace (tree::Octree<PType>& octree) {
-
-    
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
@@ -357,3 +399,21 @@ PType GetTriangles (tree::Octree<PType> &octree, int number) {
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
+template <typename PType>
+void DumpTree (tree::Octree<PType> &octree) {
+
+    std::cout << "Cube :" << std::endl;
+    std::cout << "Max: " << std::endl;
+    std::cout << octree.space_.rMaxVec_;
+    std::cout << "Min: " << std::endl;
+    std::cout << octree.space_.rMinVec_;
+
+    for (auto v : octree.Triangles_)
+        std::cout << v;
+    
+    for (int i = 0; i < 8; ++i) {
+
+        if (octree.childs_[i])
+            DumpTree (*(octree.childs_[i]));
+    }
+}
