@@ -8,6 +8,7 @@
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 namespace objects {
+
     
     //##############################################################################
     //                              VECTOR-CLASS PART
@@ -52,6 +53,32 @@ namespace objects {
 
             return *this;
         }
+
+        PType Length () const {
+
+            PType length{};
+
+            for (int i = 0; i < 3; ++i) {
+
+                length += points_[i] * points_[i];
+            }
+
+            return sqrt(length);
+        }
+
+        Vector<PType> Norm () {
+
+            PType lenght = Length ();
+
+            std::cout << "Lenght = " << lenght << std::endl;    
+            for (int i = 0; i < 3; ++i) {
+
+                points_[i] /= lenght;
+            }
+
+            return *this;
+        }
+
     };
     //##############################################################################
     //                         VECTOR-OVERLOAD PART
@@ -132,12 +159,89 @@ namespace objects {
         return Vector<PType> (x, y, z);
     }
     template <typename PType>
-    PType ScalarProduct (const Vector<PType>& vec1, const Vector<PType>& vec2) {
+    bool operator == (const Vector<PType>& vec1, const Vector<PType>& vec2) {
+        
+        return ( (vec1.GetPoint(0) == vec2.GetPoint(0)) && 
+                 (vec1.GetPoint(1) == vec2.GetPoint(1)) &&
+                 (vec1.GetPoint(2) == vec2.GetPoint(2)) );
+    
+    }
+    template <typename PType>
+    PType DotProduct (const Vector<PType>& vec1, const Vector<PType>& vec2) {
 
         return ((vec1.GetPoint(0) * vec2.GetPoint(0)) + 
             (vec1.GetPoint(1) * vec2.GetPoint(1)) +
             (vec1.GetPoint(2) * vec2.GetPoint(2)));
     }
+    template <typename PType>
+    Vector<PType> CrossProduct (const Vector<PType>& vec1, const Vector<PType>& vec2) {
+
+        return {(vec1.GetPoint(1) * vec2.GetPoint(2) - vec1.GetPoint(2) * vec2.GetPoint(1)), 
+                (vec1.GetPoint(2) * vec2.GetPoint(0) - vec1.GetPoint(0) * vec2.GetPoint(2)), 
+                (vec1.GetPoint(0) * vec2.GetPoint(1) - vec1.GetPoint(1) * vec2.GetPoint(0))};
+    }
+    //##############################################################################
+    //                         LINE-CLASS PART
+    //##############################################################################
+    template <typename PType> class Line {
+
+        Vector<PType> rVec_{};  
+        Vector<PType> dirVec_{};
+
+    public:
+        Line (Vector<PType> rVec, Vector<PType> dirVec) :
+
+            rVec_{rVec},
+            dirVec_{dirVec} {}
+
+        Vector<PType> GetRVec() const {
+
+            return rVec_;
+        }
+
+        Vector<PType> GetDirVec() const {
+
+            return dirVec_;
+        }
+    };
+    //##############################################################################
+    //                         PLANE-CLASS PART
+    //##############################################################################
+    template <typename PType> class Plane {
+
+        PType coeffs_[4]{};
+
+    public:
+        Plane (const Vector<PType> vec, const PType D) :
+        
+            coeffs_{vec.GetPoint(0), vec.GetPoint(1), vec.GetPoint(2), D} 
+        {};
+
+        PType GetCoeff (int num) const {
+
+            return coeffs_[num];
+        }
+
+        PType Dist (Vector<PType> vec) const {
+
+            return (vec.GetPoint(0) * coeffs_[0] + 
+                    vec.GetPoint(1) * coeffs_[1] +
+                    vec.GetPoint(2) * coeffs_[2] +
+                    coeffs_[3]);
+        }
+    };
+
+    template <typename PType>
+    std::ostream &operator << (std::ostream &out, const Plane<PType> &plane) {
+
+        out << "A = " << plane.GetCoeff(0) << std::endl; 
+        out << "B = " << plane.GetCoeff(1) << std::endl; 
+        out << "C = " << plane.GetCoeff(2) << std::endl;
+        out << "D = " << plane.GetCoeff(3) << std::endl; 
+
+        return out;
+    }
+    
 
     //##############################################################################
     //                         TRIANGLE-CLASS PART
@@ -145,10 +249,6 @@ namespace objects {
     template <typename PType> class Triangle {
 
     private:
-        Vector<PType> rVec1_;
-        Vector<PType> rVec2_;
-        Vector<PType> rVec3_;
-
         Vector<PType> rVecs_[3]{};
 
     public:
@@ -176,6 +276,131 @@ namespace objects {
             return (std::max ({(const PType) std::abs(rVecs_[0].GetPoint(0)), (const PType) std::abs(rVecs_[0].GetPoint(1)), (const PType) std::abs(rVecs_[0].GetPoint(2)), 
                               (const PType) std::abs(rVecs_[1].GetPoint(0)), (const PType) std::abs(rVecs_[1].GetPoint(1)), (const PType) std::abs(rVecs_[1].GetPoint(2)), 
                               (const PType) std::abs(rVecs_[2].GetPoint(0)), (const PType) std::abs(rVecs_[2].GetPoint(1)), (const PType) std::abs(rVecs_[2].GetPoint(2))}));
+        }   
+        
+        bool SignedDistance (Plane<PType> &plain) {
+
+            PType dists[3]{};
+
+            for (int i = 0; i < 3; ++i) {
+
+                dists[i] = (GetVec(i).GetPoint(0) * plain.GetCoeff(0) + 
+                            GetVec(i).GetPoint(1) * plain.GetCoeff(1) +
+                            GetVec(i).GetPoint(2) * plain.GetCoeff(2) +
+                            plain.GetCoeff(3));
+
+                std::cout << "i = " << i << std::endl << dists[i] << std::endl;
+            }
+
+            return ((((long long) (dists[0]) & (long long) (dists[1]) & (long long) (dists[2])) | ~(((long long) (dists[0]) | (long long) (dists[1]) | (long long) (dists[2])))) 
+                                    >> (sizeof(PType) * 8 - 1));
+        }
+
+     
+        bool IsIntersected (objects::Triangle<PType> &tr) {
+
+            objects::Vector<PType> firstTrSide_1  = rVecs_[1] - rVecs_[0];
+            objects::Vector<PType> firstTrSide_2  = rVecs_[2] - rVecs_[0];
+            objects::Vector<PType> firstTrSide_3  = rVecs_[2] - rVecs_[1];
+            
+            objects::Vector<PType> normFirst  = CrossProduct (firstTrSide_1, firstTrSide_2);
+
+            // normFirst.Norm();
+
+            PType D_1 = -(rVecs_[0].GetPoint(0) * normFirst.GetPoint(0) + 
+                          rVecs_[0].GetPoint(1) * normFirst.GetPoint(1) +
+                          rVecs_[0].GetPoint(2) * normFirst.GetPoint(2));
+
+            objects::Plane<PType> firstPlane{normFirst, D_1};
+
+            // std::cout << "Plane_1 of Gay Right\n" << firstPlane;
+
+            if (tr.SignedDistance(firstPlane)) 
+                return false;
+            
+
+            // std::cout << "TRUE!\n";
+
+            // std::cout << "Here!\n";
+            
+            objects::Vector<PType> secondTrSide_1 = tr.GetVec(1) - tr.GetVec(0);
+            objects::Vector<PType> secondTrSide_2 = tr.GetVec(2) - tr.GetVec(0);
+
+            objects::Vector<PType> normSecond = CrossProduct (secondTrSide_1, secondTrSide_2);
+
+            // normSecond.Norm();
+
+            objects::Vector<PType> dirVec = CrossProduct (normFirst, normSecond);
+
+            
+
+            PType D_2 = -(tr.GetVec(0).GetPoint(0) * normSecond.GetPoint(0) + 
+                          tr.GetVec(0).GetPoint(1) * normSecond.GetPoint(1) +
+                          tr.GetVec(0).GetPoint(2) * normSecond.GetPoint(2));
+
+            objects::Plane<PType> secondPlane{normSecond, D_2};
+
+            // std::cout << "Plane_2 of Gay Right\n" << secondPlane;
+
+            if (CrossProduct (normFirst, normSecond) == (objects::Vector<PType> ({0, 0, 0}))) {
+
+                if (D_1 != D_2)
+                    return false;
+            }
+
+            
+
+            if (SignedDistance(secondPlane))    
+                return false;
+            
+
+            PType a = ((((-secondPlane.GetCoeff(3)) * DotProduct (normSecond, normFirst)) - ((-firstPlane.GetCoeff(3)) * DotProduct (normSecond, normSecond))) /
+                       ((DotProduct (normSecond, normFirst) * (DotProduct (normSecond, normFirst)) - (DotProduct (normFirst, normFirst) * DotProduct (normSecond, normSecond)))));
+
+            PType b = ((((-firstPlane.GetCoeff(3)) * DotProduct (normSecond, normFirst)) - ((-secondPlane.GetCoeff(3)) * DotProduct (normFirst, normFirst))) /
+                       ((DotProduct (normSecond, normFirst) * (DotProduct (normSecond, normFirst)) - (DotProduct (normFirst, normFirst) * DotProduct (normSecond, normSecond)))));
+
+            // PType lenght = dirVec.Length();
+
+            std::cout << "VECTOR NORM1\n" << normFirst;
+            std::cout << "VECTOR NORM2\n" << normSecond;
+            std::cout << "VECTOR DIRECT\n" << dirVec;
+
+            Vector<PType> P_0 = (a * normFirst + b * normSecond) / dirVec.Length(); 
+            dirVec = dirVec.Norm();
+
+            std::cout << "Dirvec\n";
+            std::cout << dirVec;
+
+            std::cout << "P_0\n";
+            std::cout << P_0;
+
+            objects::Line<PType> line{P_0, dirVec};
+
+            std::cout << "P_0 " << P_0;
+            std::cout << "rVec " << line.GetRVec() << std::endl;
+            std::cout << "dirVec " << line.GetDirVec() << std::endl;
+
+            PType firstTrProjectedSide_1 = DotProduct (line.GetDirVec(), firstTrSide_1 - line.GetRVec());
+
+            std::cout << firstTrProjectedSide_1 << std::endl;
+
+            PType firstTrProjectedSide_2 = DotProduct (line.GetDirVec(), firstTrSide_2 - line.GetRVec());
+            PType firstTrProjectedSide_3 = DotProduct (line.GetDirVec(), firstTrSide_3 - line.GetRVec());
+
+
+
+            std::cout << (secondPlane.Dist(firstTrProjectedSide_1))<< std::endl;
+
+            std::cout << secondPlane.Dist(firstTrProjectedSide_1) << std::endl;
+
+            
+
+            PType t_00 = firstTrProjectedSide_1 + (firstTrProjectedSide_3 - firstTrProjectedSide_1) * (((secondPlane.Dist(firstTrProjectedSide_1)) / ((secondPlane.Dist(firstTrProjectedSide_1) - secondPlane.Dist(firstTrProjectedSide_3)))));
+            PType t_01 = firstTrProjectedSide_2 + (firstTrProjectedSide_3 - firstTrProjectedSide_2) * (((secondPlane.Dist(firstTrProjectedSide_2)) / ((secondPlane.Dist(firstTrProjectedSide_2) - secondPlane.Dist(firstTrProjectedSide_3)))));
+
+           std::cout << "t_00 = " << t_00 << " t_01 = " << t_01 << std::endl; 
+
         }
     };
     //##############################################################################
@@ -246,7 +471,10 @@ namespace tree {
 //##############################################################################
 template <typename PType>
 void AddTriangle (tree::Octree<PType>& octree, typename std::list<objects::Triangle<PType>>::iterator Tr, int whereIs);
+template <typename PType> 
+bool IsIntersected (objects::Triangle<PType> &first, objects::Triangle<PType> &second);
 template <typename PType> PType GetTriangles (tree::Octree<PType> &octree, int number);
+template <typename PType> void DeleteTree (tree::Octree<PType> &octree);
 template <typename PType> void DumpTree (tree::Octree<PType> &octree);
 template <typename PType> long long IntersectCount ();
 //-----------------------------------------------------------------------------------
@@ -254,7 +482,7 @@ template <typename PType> long long IntersectCount ();
 template <typename PType>
 int TrWhereIs (objects::Triangle<PType> &triangle, tree::Cube<PType> &space) {
 
-    PType center = (space.rMinVec_.GetPoint(0) + space.rMaxVec_.GetPoint(0)) / 2; 
+    objects::Vector<PType> center = (space.rMinVec_ + space.rMaxVec_) / 2; 
 
     int whereis[3]{};
 
@@ -262,10 +490,10 @@ int TrWhereIs (objects::Triangle<PType> &triangle, tree::Cube<PType> &space) {
 
         for (int j = 0; j < 3; ++j) {
 
-            if (triangle.GetVec(i).GetPoint(j) > center)
+            if (triangle.GetVec(i).GetPoint(j) >= center.GetPoint(j))
                 whereis[i] |= 1 << j;
             
-            else if (triangle.GetVec(i).GetPoint(j) == center)
+            else if (triangle.GetVec(i).GetPoint(j) == center.GetPoint(j))
                 return -1;
         }
 
@@ -351,20 +579,26 @@ long long IntersectCount () {
 
     GetTriangles (octree, number);
 
-    objects::Vector<PType> vexxx{-4, -4, -4};
-    objects::Vector<PType> veccc{4, 4, 4};
-
-    tree::Cube<PType> cube{vexxx, veccc};
-    
+    std::cout << "Size = " << octree.Triangles_.size() << std::endl;
 
     DivideSpace (octree);
+    DumpTree (octree);
+    return 10;
 
     std::cout << std::endl;
-
-    DumpTree (octree);
-
-    // DeleteTree (octree);
     
+    
+
+    DeleteTree (octree);
+
+    objects::Triangle<PType> tr1;
+    objects::Triangle<PType> tr2;
+
+    std::cin >> tr1;
+    std::cin >> tr2;
+
+    tr1.IsIntersected (tr2);
+
     std::cout << std::endl;
 
     return 10;   
@@ -383,6 +617,9 @@ PType GetTriangles (tree::Octree<PType> &octree, int number) {
         std::cin >> triangle;
         assert (std::cin.good());
 
+        if (CrossProduct (triangle.GetVec(1) - triangle.GetVec(0), triangle.GetVec(2) - triangle.GetVec(0)) == (objects::Vector<PType> ({0, 0, 0})))
+            continue;
+
         octree.Triangles_.push_back(triangle);
 
         if (triangle.MaxCoord() > max)
@@ -399,21 +636,80 @@ PType GetTriangles (tree::Octree<PType> &octree, int number) {
 }
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-template <typename PType>
-void DumpTree (tree::Octree<PType> &octree) {
+// template <typename PType>
+// void DumpTree (tree::Octree<PType> &octree) {
 
-    std::cout << "Cube :" << std::endl;
-    std::cout << "Max: " << std::endl;
-    std::cout << octree.space_.rMaxVec_;
-    std::cout << "Min: " << std::endl;
-    std::cout << octree.space_.rMinVec_;
+//     std::cout << "Cube :" << std::endl;
+//     // std::cout << octree.space_;
+//     std::cout << "Max: " << std::endl;
+//     std::cout << octree.space_.rMaxVec_;
+//     std::cout << "Min: " << std::endl;
+//     std::cout << octree.space_.rMinVec_;
 
-    for (auto v : octree.Triangles_)
-        std::cout << v;
+//     for (auto v : octree.Triangles_)
+//         std::cout << v;
     
+//     for (int i = 0; i < 8; ++i) {
+
+//         if (octree.childs_[i])
+//             DumpTree (*(octree.childs_[i]));
+//     }
+// }
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+void DeleteTree (tree::Octree<PType> &octree) {
+
     for (int i = 0; i < 8; ++i) {
 
         if (octree.childs_[i])
-            DumpTree (*(octree.childs_[i]));
+            DeleteTree (*(octree.childs_[i]));
+        
+        delete octree.childs_[i];
     }
+}
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+template <typename PType>
+void PrintNodesIntoGraphviz (tree::Octree<PType> &octree, FILE* output) {
+
+static size_t currentIndex = 0;
+
+size_t oldIndex = currentIndex;
+for (auto v : octree.Triangles_) {
+
+fprintf (output, "\"box%zu\" [shape = \"record\", label = \"{(%lg, %lg, %lg); (%lg, %lg, %lg); (%lg, %lg, %lg)}\"]\n",
+++currentIndex, v.GetVec(0).GetPoint(0), v.GetVec(0).GetPoint(1), v.GetVec(0).GetPoint(2), v.GetVec(1).GetPoint(0), v.GetVec(1).GetPoint(1), v.GetVec(1).GetPoint(2), v.GetVec(2).GetPoint(0), v.GetVec(2).GetPoint(1), v.GetVec(2).GetPoint(2));
+fprintf (output, "\"box%zu\" -> \"box%zu\"\n", oldIndex, currentIndex);
+
+}
+
+for (size_t i = 0; i < 8; i++) {
+
+if (octree.childs_[i])
+PrintNodesIntoGraphviz (*(octree.childs_[i]), output);
+
+}
+
+}
+
+template <typename PType>
+void DumpTree (tree::Octree<PType> &octree) {
+
+FILE* output = fopen ("treeDump.gv", "w");
+if (!output) {
+
+std::cout << "bad fopen" << std::endl;
+return;
+
+}
+
+fprintf (output, "digraph Tree {\n");
+
+PrintNodesIntoGraphviz (octree, output);
+
+fprintf (output, "}\n");
+
+fclose (output);
+
 }
