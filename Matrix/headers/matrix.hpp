@@ -40,7 +40,7 @@ namespace Matrix {
             rhs.size_ = 0;
         }
 
-        Matrix (int size, int det) : size_(size) {  //PseudoRandomMatrixCtor with a given determinant
+        Matrix (int size, int det) : size_(size) {  //PseudoRandomMatrixCtor with a given determinant // I don't like it :(
 
             matrix_ = new pType* [size_];
             assert (matrix_);
@@ -141,11 +141,8 @@ namespace Matrix {
             return tmp;
         }
 
-
-
         pType determinant () {
 
-            // Matrix <double> tmpMatrix = *this;
             double** tmpMatrix = new double* [size_];
             int sign {};
 
@@ -157,15 +154,6 @@ namespace Matrix {
             }
 
             for (int current = 0; current < size_; ++current) {
-
-
-                // for (int i = 0; i < size_; ++i) {
-
-                //     for (int j = 0; j < size_; ++j)
-                //         std::cout << std::setw(6) << tmpMatrix[i][j];
-
-                //     std::cout << std::endl;
-                // }
 
                 MaxElem maxElem = maxSubMatrixElem(tmpMatrix, current, size_);
 
@@ -182,8 +170,6 @@ namespace Matrix {
                     ++sign;
                     maxElem.row = current;
                 }
-
-                // std::cout << "max elem = " << maxElem.max << std::endl;
 
                 if (DoubleCmp (std::abs(tmpMatrix[current][current]), 0) == 0) {
 
@@ -224,5 +210,19 @@ namespace Matrix {
                 in >> thou[i][j];
 
         return in;
+    }
+
+    template <typename pType> bool operator == (const Matrix<pType> &first, const Matrix<pType> &second) {
+
+        int firstSize = first.getSize();
+        int secondSize = second.getSize();
+        if (firstSize == secondSize)
+            for (int i = 0; i < firstSize; ++i) 
+                for (int j = 0; j < firstSize; ++j)
+                    if (first[i][j] != second[i][j])
+                        return false;
+            
+        return true;
+
     }
 }
