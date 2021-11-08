@@ -31,5 +31,10 @@
 **INPUT:** ---> << 2 1 0 1 0 >> ||^_^|| **OUTPUT:** ---> << 1 >>
 
 --- 
+---
+# Useful materials: 
+![Screenshot](pics/algorithm.png)
+(C) C-graduate Konstantin Vladimirov
+===================================================================================================
 
 # Implemented by second-year MIPT student Belov Vladislav
