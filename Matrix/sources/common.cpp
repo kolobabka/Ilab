@@ -93,7 +93,5 @@ double CalcTrace (double** tmpMatrix, int size) {
     }
 
     delete [] tmpMatrix;
-
-    // std::cout << std::setprecision(7) << det << std::endl;
     return det;
 }

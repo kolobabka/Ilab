@@ -95,6 +95,14 @@ TEST( detTest, test8 ) {
 
     testDetFunc ("../tests/test8.txt", "../tests/answ8.txt");
 }
+TEST( detTest, test9 ) {
+
+    testDetFunc ("../tests/test9.txt", "../tests/answ9.txt");
+}
+TEST( detTest, test10 ) {
+
+    testDetFunc ("../tests/test10.txt", "../tests/answ10.txt");
+}
 //######################################################################################################
 //######################################################################################################
 //                                      Test of Copy Ctor

@@ -71,7 +71,6 @@ namespace Matrix {
             int randRange = rand () % 5 ;
 
             for (int i = 0; i < randRange; ++i) {
-
                 for   (int j = 0; j < size_ - 1; ++j) {
 
                     int randCoeff = (rand () % 4);
