@@ -184,8 +184,8 @@ TEST( AssignmentTest, test2 ) {
     Matrix::Matrix<double> firstMatrix  = inputMatrix ("../tests/test2.txt");
     Matrix::Matrix<double> secondMatrix = {};
 
-    firstMatrix = secondMatrix; 
-    
+    firstMatrix = std::move (secondMatrix); 
+        
     ASSERT_EQ(firstMatrix, secondMatrix);
 }
 TEST( AssignmentTest, test3 ) {

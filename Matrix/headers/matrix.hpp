@@ -10,10 +10,21 @@ namespace Matrix {
     private:
         int size_;
         pType** matrix_;
-    public:
-        Matrix (int size = 0) : size_(size) {
 
-            matrix_ = new pType* [size_];
+        void copyMatrix (const Matrix &rhs) & {
+
+            for (int i = 0; i < size_; ++i) {
+                
+                pType* rhsMatrix = rhs.matrix_[i];
+                matrix_[i] = new pType [size_]{};
+                assert (matrix_[i]);
+
+                std::copy (rhsMatrix, rhsMatrix + size_, matrix_[i]);
+            }
+        }
+    public:
+        Matrix (int size = 0) : size_(size), matrix_(new pType* [size]) {
+            
             assert (matrix_);
             for (int i = 0; i < size_; ++i) {
 
@@ -21,18 +32,10 @@ namespace Matrix {
                 assert (matrix_[i]);
             }
         }
-        Matrix (const Matrix &rhs) : size_(rhs.size_) { //Copy ctor
+        Matrix (const Matrix &rhs) : size_(rhs.size_), matrix_(new pType* [size_]) { //Copy ctor
 
-            matrix_ = new pType* [size_];
             assert (matrix_);
-
-            for (int i = 0; i < size_; ++i) {
-
-                pType* rhsMatrix = rhs.matrix_[i];
-                matrix_[i] = new pType [size_]{};
-                assert (matrix_[i]);
-                std::copy (rhsMatrix, rhsMatrix + size_, matrix_[i]);
-            }
+            copyMatrix (rhs);
         }
         Matrix (Matrix &&rhs) noexcept : size_(rhs.size_), matrix_(rhs.matrix_) { //Move ctor
 
@@ -40,16 +43,8 @@ namespace Matrix {
             rhs.size_ = 0;
         }
 
-        Matrix (int size, int det) : size_(size) {  //PseudoRandomMatrixCtor with a given determinant // I don't like it :(
+        Matrix (int size, int det) : Matrix (size) {  //PseudoRandomMatrixCtor with a given determinant // I don't like it :(
 
-            matrix_ = new pType* [size_];
-            assert (matrix_);
-
-            for (int i = 0; i < size_; ++i) {
-
-                matrix_[i] = new pType [size_]{};
-                assert (matrix_[i]);
-            }
             int j = 0;
             for (int i = 0; i < size_; i++) {
 
@@ -87,21 +82,12 @@ namespace Matrix {
             for (int i = 0; i < size_; ++i)
                 delete [] matrix_[i];
             size_ = rhs.size_;
-
             delete [] matrix_;
 
             matrix_ = new pType* [size_];
             assert (matrix_);
 
-            for (int i = 0; i < size_; ++i) {
-
-                pType* rhsMatrix = rhs.matrix_[i];
-                matrix_[i] = new pType [size_]{};
-                assert (matrix_[i]);
-
-                for (int j = 0; j < size_; ++j)
-                    matrix_[i][j] = rhsMatrix[j];
-            }
+            copyMatrix (rhs);
             return *this;
         }
         Matrix& operator=(Matrix &&rhs) noexcept { //Move-operator
@@ -109,7 +95,7 @@ namespace Matrix {
             if (&rhs == this)
                 return *this;
 
-            size_ = rhs.size_;
+            std::swap (size_, rhs.size_);
             std::swap (matrix_, rhs.matrix_);
             return *this;
         }
