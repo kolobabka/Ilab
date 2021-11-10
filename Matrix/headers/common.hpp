@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
 
-const double EPSILON = 10E-10;
+const double EPSILON = 10E-16;
 
 struct MaxElem {
 
