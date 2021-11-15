@@ -17,7 +17,7 @@ namespace Matrix {
                 
                 pType* rhsMatrix = rhs.matrix_[i];
                 matrix_[i] = new pType [size_]{};
-                assert (matrix_[i]);
+                assert (matrix_[i]);                   
 
                 std::copy (rhsMatrix, rhsMatrix + size_, matrix_[i]);
             }
@@ -37,6 +37,7 @@ namespace Matrix {
             assert (matrix_);
             copyMatrix (rhs);
         }
+
         Matrix (Matrix &&rhs) noexcept : size_(rhs.size_), matrix_(rhs.matrix_) { //Move ctor
 
             rhs.matrix_ = nullptr;
@@ -115,6 +116,75 @@ namespace Matrix {
             delete [] matrix_;
         };
 
+        MaxElem maxSubMatrixElem (int current) const {
+
+            MaxElem maxElemT {current, current, matrix_[current][current]};
+            for (int i = current; i < size_; ++i)
+                for (int j = current; j < size_; ++j)
+                    if ((DoubleCmp (std::abs(maxElemT.max), std::abs(matrix_[i][j]))) < 0  && DoubleCmp (std::abs(matrix_[i][j]), 0) != 0) {
+
+                        maxElemT.col = j;
+                        maxElemT.row = i;
+                        maxElemT.max = matrix_[i][j];
+                    }
+
+            return maxElemT;
+        }
+
+        void swap_columns (int current, MaxElem *maxElem) {
+
+            assert (maxElem);
+            double tmp {};
+
+            for (int i = current; i < size_; ++i) {
+
+                tmp = matrix_[i][current];
+                matrix_[i][current] = matrix_[i][maxElem->col];
+                matrix_[i][maxElem->col] = tmp;
+            }
+        }
+
+        void swap_rows (int current, MaxElem *maxElem) {
+
+            assert (maxElem);
+            double tmp {};
+
+            for (int i = current; i < size_; ++i) {
+
+                tmp = matrix_[current][i];
+                matrix_[current][i] = matrix_[maxElem->row][i];
+                matrix_[maxElem->row][i] = tmp;
+            }
+        }
+
+        void eliminate (int current) {
+
+            double coeff{};
+
+            for (int i = current + 1; i < size_; ++i) {
+
+                coeff = matrix_[i][current] / matrix_[current][current];
+
+                for (int j = 0; j < size_; ++j) {
+
+                    matrix_[i][j] -= matrix_[current][j] * coeff;
+
+                    if (DoubleCmp (std::abs(matrix_[i][j]), 0) == 0)
+                        matrix_[i][j] = 0;
+                }
+            }
+        }
+
+        double calcTrace () {
+
+            double det{1};
+
+            for (int i = 0; i < size_; ++i) 
+                det *= matrix_[i][i];
+        
+            return det;
+        }
+
     public:
         int getSize() const {
 
@@ -128,50 +198,39 @@ namespace Matrix {
 
         pType determinant () {
 
-            double** tmpMatrix = new double* [size_];
+            Matrix <double> testMatrix = *this;
             int sign {};
-
-            for (int i = 0; i < size_; ++i) {
-
-                tmpMatrix[i] = new double [size_];
-                for (int j = 0; j < size_; ++j)
-                    tmpMatrix[i][j] = static_cast<double> (matrix_[i][j]);
-            }
-
+            
             for (int current = 0; current < size_; ++current) {
+                                
+                MaxElem maxElem = testMatrix.maxSubMatrixElem(current);
 
-                MaxElem maxElem = maxSubMatrixElem(tmpMatrix, current, size_);
-
-                swap_columns (tmpMatrix, current, &maxElem, size_);
                 if (maxElem.col != current) {
 
+                    testMatrix.swap_columns(current, &maxElem);
                     ++sign;
                     maxElem.col = current;
                 }
-
-                swap_rows (tmpMatrix, current, &maxElem, size_);
+                
                 if (maxElem.row != current) {
-
+                    
+                    testMatrix.swap_rows(current, &maxElem);
                     ++sign;
                     maxElem.row = current;
                 }
 
-                if (DoubleCmp (std::abs(tmpMatrix[current][current]), 0) == 0) {
-
-                    for (int i = 0; i < size_; ++i)
-                        delete [] tmpMatrix[i];
-
-                    delete [] tmpMatrix;
+                if (DoubleCmp (std::abs(testMatrix[current][current]), 0) == 0) {
+                    
                     return 0;
                 }
-
-                eliminate (tmpMatrix, current, size_);
+                
+                testMatrix.eliminate(current);
             }
 
             if (sign % 2 == 0)
-                return pType (CalcTrace (tmpMatrix, size_));
+                return pType (testMatrix.calcTrace());
 
-            return pType (-CalcTrace (tmpMatrix, size_));
+            return pType (-testMatrix.calcTrace ());
         }
     };
 
