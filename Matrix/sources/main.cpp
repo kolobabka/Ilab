@@ -7,7 +7,7 @@ int main () {
     std::cin >> size;
     assert (std::cin.good());
 
-    Matrix::Matrix <int> matrix{size};
+    Matrix::Matrix <double> matrix{size};
     std::cin >> matrix;
 
     std::cout << matrix.determinant() << std::endl;
