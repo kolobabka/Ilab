@@ -11,19 +11,20 @@ namespace Matrix {
         int size_;
         pType** matrix_;
 
-        void copyMatrix (const Matrix &rhs) & {
+        template  <typename someType = pType> 
+        void copyMatrix (const Matrix<someType> &rhs) & {
 
             for (int i = 0; i < size_; ++i) {
                 
-                pType* rhsMatrix = rhs.matrix_[i];
                 matrix_[i] = new pType [size_]{};
                 assert (matrix_[i]);                   
 
-                std::copy (rhsMatrix, rhsMatrix + size_, matrix_[i]);
+                for (int j = 0; j < size_; ++j) 
+                    matrix_[i][j] = rhs[i][j];
             }
         }
     public:
-        Matrix (int size = 0) : size_(size), matrix_(new pType* [size]) {
+        Matrix (int size = 0) : size_(size), matrix_(new pType* [size_]) {
             
             assert (matrix_);
             for (int i = 0; i < size_; ++i) {
@@ -32,8 +33,15 @@ namespace Matrix {
                 assert (matrix_[i]);
             }
         }
-        Matrix (const Matrix &rhs) : size_(rhs.size_), matrix_(new pType* [size_]) { //Copy ctor
+        Matrix (const Matrix &rhs) : size_(rhs.getSize()), matrix_(new pType* [size_]) { //Copy ctor
 
+            assert (matrix_);
+            copyMatrix (rhs);
+        }
+
+        template <typename someType> 
+        Matrix (const Matrix<someType> &rhs) : size_(rhs.getSize()), matrix_(new pType* [size_]) {
+            
             assert (matrix_);
             copyMatrix (rhs);
         }
@@ -197,12 +205,12 @@ namespace Matrix {
         }
 
         pType determinant () {
-
+            
             Matrix <double> testMatrix = *this;
             int sign {};
             
             for (int current = 0; current < size_; ++current) {
-                                
+                
                 MaxElem maxElem = testMatrix.maxSubMatrixElem(current);
 
                 if (maxElem.col != current) {
