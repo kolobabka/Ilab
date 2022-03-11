@@ -2,10 +2,11 @@
 //----------------------------------------
 //----------------------------------------
 int main () {
-
-    App<int> app;
-
+    size_t lenght;
+    std::cin >> lenght;
+    BitonicSort::App<int> app(lenght, "../sources/kernel.cl");
+    std::cout << "Dead" << std::endl;
     app.run();
-    app.inputSequence();
+   //app.inputSequence(); 
     return 0;
 }
