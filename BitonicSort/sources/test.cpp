@@ -1,69 +1,135 @@
-#include <iostream> 
-#include <vector>
+#include "bitsort.hpp"
+#include <gtest/gtest.h>
+//----------------------------------------
+//----------------------------------------
+#define CHANGE_STREAM(name) freopen (name, "r", stdin);\
+    if (ftest == NULL) {                                \
+        perror ("File open error:\n");                  \
+        return;                                         \
+    }       
 
-
-int main () {
-
-    int step = 1;
-    int subSeqSize = 4;
-
-    std::vector<int> vec;
-    int size;
-    std::cin >> size;
-
-    for (int i = 0; i < size; ++i) {
-
-        int tmp;
-        std::cin >> tmp;
-        vec.push_back(tmp);
+#define CLOSE_FD(ftest) int error = fclose (ftest); \
+    if (error != 0) {                            \
+        perror ("File close error:\n");          \
+        return;                                     \
     }
 
-    std::cout << "\t\t\t###BEFORE" << std::endl;
+//----------------------------------------
+//----------------------------------------
+namespace {
 
-    for (auto v : vec) 
-        std::cout << v << " ";
-    std::cout << std::endl;
-
-    int num = size / subSeqSize;
-
-    std::cout << "\t\t##NUM = " << num << std::endl;
+#if 0
+    void simpTestSorting (FILE* ftest) try {
 
 
-    for (int i = 0; i < size; ++i) {
+        BitonicSort::App<int> testApp ("../kernels/kernel.cl");
+        auto time = testApp.run();
 
-    
-        if (i % (step * 2) < step) {
+        CLOSE_FD (ftest);
+
+        std::vector<int>& seq = testApp.getSeq();
+
+        int prev = seq[0];
+        int cur  = 0;
+
+        for (size_t i = 1; i < seq.size(); ++i) {
             
-            int upORdown = 1;
-            if ((i / subSeqSize) % 2 == 1)
-			    upORdown = 0;
-            
-            std::cout << "i = " << i << ", i + step = " << i + step << std::endl;
-            std::cout << " i / num = " <<  i / subSeqSize << std::endl;
-            std::cout << "upORdown = " << upORdown << std::endl;
-
-            if (i + step >= size)
-                std::cout << "Gay has been found" << std::endl;
-
-            int first  = vec[i];
-            int second = vec[i + step];
-
-            if ((first > second) && upORdown) {
-
-                vec[i] = second;
-                vec[i + step] = first;
-            }
-            else if ((first < second) && !upORdown) {
-
-                vec[i] = second;
-                vec[i + step] = first;
-            }
+            cur = seq[i];
+            ASSERT_GE (cur, prev);
         }
     }
+    catch (std::exception &err) {
 
-    std::cout << "\t\t\t###AFTER" << std::endl;
+        CLOSE_FD (ftest);
 
-    for (auto v : vec) 
-        std::cout << v << " ";
-    std::cout << std::endl;
+        std::cout << "Caught exception: " << err.what() << std::endl;
+    }
+#endif
+
+    void parTestSorting (FILE* ftest) try {
+
+
+        BitonicSort::App<int> testApp ("../kernels/kernel.cl");
+        auto time = testApp.run();
+
+        CLOSE_FD (ftest);
+
+        std::vector<int>& seq = testApp.getSeq();
+
+        int prev = seq[0];
+        int cur  = 0;
+
+        for (size_t i = 1; i < seq.size(); ++i) {
+            
+            cur = seq[i];
+            ASSERT_GE (cur, prev);
+        }
+    }
+    catch (std::exception &err) {
+
+        CLOSE_FD (ftest);
+
+        std::cout << "Caught exception: " << err.what() << std::endl;
+    }
+}
+//######################################################################################################
+//######################################################################################################
+//                                      Test of GPU_SORT
+//######################################################################################################
+//######################################################################################################
+
+TEST( parTestSorting, test1 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/001.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test2 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/002.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test3 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/003.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test4 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/004.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test5 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/005.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test6 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/006.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test7 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/007.dat");
+    parTestSorting (ftest);
+}
+
+TEST( parTestSorting, test8 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/008.dat");
+    parTestSorting (ftest);
+}
+//----------------------------------------
+//----------------------------------------
+int main (int argc, char** argv) {
+
+    testing::InitGoogleTest (&argc, argv);
+
+    return RUN_ALL_TESTS ();
 }

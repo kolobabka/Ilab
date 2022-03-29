@@ -9,6 +9,7 @@
 #include <string>
 #include <fstream>
 #include <chrono>
+#include <cmath>
 //----------------------------------------
 //----------------------------------------
 #ifndef CL_HPP_TARGET_OPENCL_VERSION
@@ -18,6 +19,7 @@
 
 #define CL_HPP_CL_1_2_DEFAULT_BUILD
 #define CL_HPP_ENABLE_EXCEPTIONS
+
 
 #include "CL/opencl.hpp"
 
@@ -30,140 +32,194 @@
   } else                                                                       \
     std::cout
 
-#define LOCAL_SIZE 128
+#define PARALLEL
 //----------------------------------------
 //----------------------------------------
+namespace OCL {
 
-template <typename Type> 
-struct OclApp final {
+    template <typename Type>
+    const std::string getFunction ();
 
-    cl::Platform     platform_;
-    cl::Context      context_;
-    cl::CommandQueue queue_;
-    std::string      kernel_;
+    template <> const std::string getFunction<char>             ()                   {return "bitonic_merge_char";  }
+    template <> const std::string getFunction<int>              ()                   {return "bitonic_merge_int";   }
+    template <> const std::string getFunction<float>            ()                   {return "bitonic_merge_float"; }
+    template <> const std::string getFunction<double>           ()                   {return "bitonic_merge_double";}
 
-    static cl::Platform select_platform ();
-    static cl::Context  get_gpu_context (cl_platform_id);
+    template <typename Type> 
+    struct OclApp final {
 
-    using split_t = cl::KernelFunctor<cl::Buffer, int>;
-    using merge_t = cl::KernelFunctor<cl::Buffer, int, int, int>;
+        cl::Platform     platform_;
+        cl::Context      context_;
+        cl::CommandQueue queue_;
+        std::string      kernel_;
 
-public:
-    // size_t           bufSz_;   
-    // cl::Buffer       seq_; 
-
-    OclApp (std::string kernelPath) : platform_(select_platform()), context_(get_gpu_context(platform_())), 
-                                                   queue_(context_) {
+        static cl::Platform selectPlatform ();
+        static cl::Context  getGPUContext (cl_platform_id);
         
-        std::fstream file (kernelPath, std::ios_base::in);
+        const cl::string name_;
+        const cl::string profile_;
 
-        while (file) {
+        OclApp (std::string kernelPath) : platform_(selectPlatform()), context_(getGPUContext(platform_())), queue_(context_), 
+                                          name_(platform_.getInfo<CL_PLATFORM_NAME>()), profile_(platform_.getInfo<CL_PLATFORM_PROFILE>()) { //!TODO: Throw exception if kernel is unavailable 
+            
+            std::fstream file (kernelPath, std::ios_base::in);
 
-            std::string newLine;
-            std::getline (file, newLine);
+            if (!file)
+                throw std::runtime_error ("Disable to open a file");
 
-            kernel_ += newLine + "\n";
+            while (file) {
+
+                std::string newLine;
+                std::getline (file, newLine);
+
+                kernel_ += newLine + "\n";
+            };
+
+            dbgs << "Selected: " << name_ << ": " << profile_ << std::endl;
+        }
+    };
+    //----------------------------------------
+    //----------------------------------------
+    template <typename Type>
+    cl::Platform OclApp<Type>::selectPlatform () {
+
+        cl::vector<cl::Platform> platforms;
+        cl::Platform::get (&platforms);
+
+        for (auto p : platforms) {
+
+            cl_uint numDevices = 0;
+            ::clGetDeviceIDs (p(), CL_DEVICE_TYPE_GPU, 0, NULL, &numDevices);
+	
+	#ifdef NVIDIA
+            if (p.getInfo<CL_PLATFORM_NAME> () == "NVIDIA CUDA")
+                return cl::Platform(p);
+	#else 
+	    if (numDevices > 0)
+		return cl::Platform(p);
+	#endif
+	 
         }
 
-        cl::string name    = platform_.getInfo<CL_PLATFORM_NAME>();
-        cl::string profile = platform_.getInfo<CL_PLATFORM_PROFILE>();
-
-        dbgs << "Selected: " << name << ": " << profile << std::endl;
-    }
-    
-    // void copy (Type *sequence, size_t size) {
-
-    //     cl::copy (queue_, sequence, sequence + size, seq_);
-    // }
-
-    void bitonic_merge (cl::Buffer &seq_, size_t size, size_t subSeqSize, size_t step,  cl::Program &program, cl::EnqueueArgs &args) {
-
-        // Type* seqData = sequence.data();
-       
-        // cl::Buffer seq_ (context_, CL_MEM_READ_WRITE, bufSz);
-
-        // cl::copy(queue_, seqData, seqData + size, seq_);
-
-
-        // cl::Program program (context_, kernel_, true); //think how to replace it to methods
-        merge_t merge_seq (program, "bitonic_merge");
-
-        // cl::NDRange globalRange (size);
-        // cl::EnqueueArgs args (queue_, globalRange);
-
-        // std::cout << "subSeqSize = " << subSeqSize << std::endl;
-        // std::cout << "step = " << step << std::endl;
-
-        cl::Event event = merge_seq (args, seq_, subSeqSize * 2, step, size);
-        event.wait();
-
-        // std::cout << "\t\t\t###BEFORE" << std::endl;
-        // for (auto v : sequence)
-        //     std::cout << v << " ";
-        // std::cout << std::endl;
-
-      
-
-        // std::cout << "\t\t\t###AFTER" << std::endl;   
-        // for (auto v : sequence)
-        //     std::cout << v << " ";
-        // std::cout << std::endl;
+        throw std::runtime_error ("No platform selected");
     }
 
-    void bitonic_split (Type *sequence, size_t size) {
+    template <typename Type>
+    cl::Context OclApp<Type>::getGPUContext (cl_platform_id PId) {
 
-        size_t BufSz = size * sizeof (Type);
+        cl_context_properties properties[] = {
 
-        cl::Buffer seq (context_, CL_MEM_READ_WRITE, BufSz);
-        cl::copy (queue_, sequence, sequence + size, seq);
+            CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(PId), 0
+        };
 
-        cl::Program program (context_, kernel_, true);
-        split_t split_seq (program, "bitonic_split");
-
-        cl::NDRange globalRange (size / 2);
-        cl::EnqueueArgs args (queue_, globalRange);
-
-        auto start = std::chrono::steady_clock::now ();
-
-        cl::Event event = split_seq (args, seq, size / 2);
-        event.wait();
-
-        auto end = std::chrono::steady_clock::now ();
-        std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";
-
+        return cl::Context (CL_DEVICE_TYPE_GPU, properties);
     }
-};
-
+}
+//----------------------------------------
+//----------------------------------------
 namespace BitonicSort {
-
     template <typename Type>
     class App final {
 
-        size_t size_ = 0;
-        OclApp<Type> app_;
+        size_t lenght_ = 0;
+        OCL::OclApp<Type> app_;
         std::vector<Type> sequence_;
-        
-        void readSequence () {
 
-            for (size_t i = 0; i < size_; ++i) {
+     	using merge_t = cl::KernelFunctor<cl::Buffer, cl_int, cl_int>;
+
+    private:
+        void possibleExtention (Type min) {
+
+            double log_2 = log2(double (lenght_));
+            if (fabs (log_2 - int (log2 (lenght_))) > 10E-15) {
+                
+                size_t newSize = pow (2, int(log_2) + 1);
+                
+                for (size_t i = lenght_; i < newSize; ++i)
+                    sequence_.push_back (min);
+            }
+        }
+   
+        void readSequence () { 
+            
+            std::cin >> lenght_;
+            if (lenght_ == 0)
+                throw std::runtime_error ("Zero lenght of sequence (empty input)");
+
+            sequence_.reserve(lenght_);
+
+            Type min;
+            std::cin >> min;
+            sequence_.push_back(min);
+
+            for (size_t i = 1; i < lenght_; ++i) {
                 
                 Type val;
                 std::cin >> val;
+
+                if (val < min)
+                    min = val;
                 sequence_.push_back(val);
             }
-        }
 
-        void bitonicSplit (std::string kernelPath) {
+            possibleExtention (min);
+        }
+//######################################################################################################
+//######################################################################################################
+//                                           GPU_SORT
+//######################################################################################################
+//######################################################################################################
+        void parallelSort () {
             
-            OclApp<int> app (kernelPath, size_);
+            size_t seqSize = sequence_.size ();
+            size_t subSeqSize   = 1;
+            size_t middle = seqSize / 2;
 
-            app.bitonic_split (sequence_.data(), sequence_.size());
+            Type* sequence = sequence_.data();
+
+            cl::Buffer seq_ (app_.context_, CL_MEM_READ_WRITE, seqSize * sizeof(Type));
+            cl::copy(app_.queue_, sequence, sequence + seqSize, seq_);
+
+            cl::Program program (app_.context_, app_.kernel_, true); //TODO: think how to replace it to fields
+            cl::NDRange globalRange (seqSize);
+            cl::EnqueueArgs args (app_.queue_, globalRange);
+            merge_t merge_seq (program, OCL::getFunction<Type>());
+
+            for (; subSeqSize <= middle; subSeqSize *= 2) 
+                for (size_t step = subSeqSize; step >= 1; step /= 2) 
+                    bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
+
+            cl::copy (app_.queue_, seq_, sequence, sequence + seqSize);
         }
 
-        void bitonicSplit () {
-        
-            const size_t middle = size_ / 2;
+        void bitonicMerge (cl::Buffer &seq_, size_t subSeqSize, size_t step,  merge_t &merge_seq, cl::EnqueueArgs &args) {
+
+            cl::Event event = merge_seq (args, seq_, subSeqSize * 2, step);
+            event.wait();
+        }
+//######################################################################################################
+//######################################################################################################
+//                                          CPU_SORT
+//######################################################################################################
+//######################################################################################################
+        void bitonicSort () {  
+
+            size_t seqSize = sequence_.size ();
+            size_t step = 1;
+            size_t middle = seqSize / 2;
+
+            while (step <= middle) {
+                
+                makeSubSeqBitonic (seqSize, step); 
+                step *= 2;
+            }
+
+            bitonicSplit (seqSize);
+        }
+
+        void bitonicSplit (size_t seqSize) {
+            
+            const size_t middle = seqSize / 2;
 
             for (size_t i = 0; i < middle; ++i) {
 
@@ -172,34 +228,9 @@ namespace BitonicSort {
             }
         }    
 
-        void sort () {
-            
-            size_t subSeqSize   = 1;
-            size_t middle = size_ / 2;
+        void makeSubSeqBitonic (size_t seqSize, size_t step) { //TODO: Why is it so ugly? Maybe you should remove it?
 
-            Type* sequence = sequence_.data();
-            size_t bufSz = (size_ * sizeof(Type)); 
-
-            cl::Buffer seq_ (app_.context_, CL_MEM_READ_WRITE, bufSz);
-            cl::copy(app_.queue_, sequence, sequence + size_, seq_);
-
-            cl::Program program (app_.context_, app_.kernel_, true); //think how to replace it to methods
-            cl::NDRange globalRange (size_);
-            cl::EnqueueArgs args (app_.queue_, globalRange);
-            
-            for (; subSeqSize <= middle; subSeqSize *= 2) {
-                for (size_t step = subSeqSize; step >= 1; step /= 2) {
-
-                    app_.bitonic_merge(seq_, size_, subSeqSize, step, program, args);
-                }
-            }
-
-            cl::copy (app_.queue_, seq_, sequence, sequence + size_);
-        }
-
-        void makeSubSeqBitonic (size_t step) {
-
-            size_t cur  = 0;
+            size_t cur    = 0;
             size_t stStep = step;
             size_t border = stStep;
             bool upORdown = true;   //true --> up  
@@ -207,12 +238,13 @@ namespace BitonicSort {
             while (step >= 1) {
             
                 if (!stStep) {
+
                     upORdown = !upORdown;
                     stStep = border;
                 }
                 --stStep;
 
-                if (cur + step >= size_) {
+                if (cur + step >= seqSize) {
 
                     cur = 0;
                     step /= 2;
@@ -232,78 +264,48 @@ namespace BitonicSort {
 
                 ++cur;
             }
-        }
-
-        void bitonicSort () {        
-
-            size_t step = 1;
-            size_t middle = size_ / 2;
-
-            while (step <= middle) {
-                
-                makeSubSeqBitonic (step); 
-                step *= 2;
-            }
-
-            bitonicSplit ();
-        }
-
-
+        }   
     public:
-        App (size_t lenght, std::string kernelPath) : size_(lenght), app_(kernelPath) {sequence_.reserve(size_);}
+        App (std::string kernelPath) : app_(kernelPath) {}
 
-        void run () {
+    #ifdef DEBUG
+
+        std::vector<Type> & getSeq () { return sequence_; }
+    
+    #endif 
+
+        std::chrono::duration<double> run () { 
 
             readSequence ();
+
             auto start = std::chrono::steady_clock::now ();
 
-            // bitonicSort();
+            #ifdef SIMPLE 
+            #undef PARALLEL
+            bitonicSort();
+            #endif
+            #ifdef STD
+            #undef PARALLEL
+            std::sort (sequence_.begin(), sequence_.end());
+            #endif
+            #ifdef PARALLEL
+            parallelSort ();
+            #endif
 
-            sort ();
-
-            // std::sort (sequence_.begin(), sequence_.end());
             auto end = std::chrono::steady_clock::now ();
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";
+            return end - start;      
         }
 
         void inputSequence () const {
-
-            for (auto v : sequence_)
-                std::cout << v << " ";
             
+            size_t size = sequence_.size();
+
+            for (size_t i = size - lenght_; i != size; ++i)
+                std::cout << sequence_[i] << " ";            
             std::cout << std::endl;
         }
     };
 }
 
-template <typename Type>
-cl::Platform OclApp<Type>::select_platform () {
-
-    cl::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-
-    for (auto p : platforms) {
-
-        cl_uint numDevices = 0;
-        ::clGetDeviceIDs (p(), CL_DEVICE_TYPE_GPU, 0, NULL, &numDevices);
-
-        if (numDevices > 0)
-            return cl::Platform(p);
-    }
-
-    throw std::runtime_error ("No platform selected");
-}
-
-template <typename Type>
-cl::Context OclApp<Type>::get_gpu_context (cl_platform_id PId) {
-
-    cl_context_properties properties[] = {
-
-        CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(PId), 0
-    };
-
-    return cl::Context (CL_DEVICE_TYPE_GPU, properties);
-}
 
 #endif
