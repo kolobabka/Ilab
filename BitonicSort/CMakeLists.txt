@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.16)
 project ("Bitonic Sort" VERSION 1.0.0)
 
 set (EXEC_FILE "bitonic_sort")
-if (DEBUF)
+if (DEBUG)
 set (TEST_FILE "tests")
 endif ()
 
-if (DEBUF)
+if (DEBUG)
 set (GTEST_ROOT ${CMAKE_SOURCE_DIR}/googletests/gTest)
 find_package(GTest REQUIRED)
 endif ()
