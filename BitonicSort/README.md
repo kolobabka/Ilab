@@ -1,17 +1,25 @@
 # How to build a project
+## Release:
 ```
   $ mkdir build
   $ cd build
-  $ cmake -DGPU=on ..
+  $ cmake ..
   $ make
 ```
-* Note: flag  **-DGPU** run sorting on GPU, but you also have an opportunity to run simple bitonic sort on CPU or even std::sort. To do it run *cmake* with relevants parameters below:
+* Note: You also have an opportunity to run simple bitonic sort on CPU or even std::sort. To do it run *cmake* with relevants parameters below:
 ```
-cmake -DCPU=on -DGPU=off -DSTD=off ..   
+cmake -DCPU=on -DSTD=off ..   
 ```
 OR
 ```
-cmake -DCPU=off -DGPU=on -DSTD=off ..   
+cmake -DCPU=off -DSTD=on ..   
+```
+## Debug:
+```
+  $ mkdir build
+  $ cd build
+  $ cmake -DDebug..
+  $ make
 ```
 ## Make sure you have OpenCL installed!
 ---
@@ -34,7 +42,7 @@ cmake -DCPU=off -DGPU=on -DSTD=off ..
 ```
 ---
 ---
-### In the folder 'build' executiable files 'bitonic_sort' and  test-file 'tests' will appear
+### In the folder 'build' executiable files 'bitonic_sort' and  test-file 'tests' (with -DDebug) will appear
 ---
 ## Input data: 
 * **N** --- size of a sequence

@@ -7,15 +7,6 @@ int main () try {
 
     std::vector<int> sequence;
     inputSequence<int> (sequence);
-#ifdef GPU
-    std::cout << "\t\t\t###GPU-SORT" << std::endl;
-
-    BitonicSort::GPUSortApp<int> GPUapp(sequence, "../kernels/kernel.cl");
-    auto elapsed_seconds = GPUapp.run();
-
-    outputSequence (GPUapp.getSeq()); 
-    std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";  
-#endif
 
 #ifdef CPU
     std::cout << "\t\t\t###CPU-SORT" << std::endl;
@@ -25,6 +16,7 @@ int main () try {
 
     outputSequence (CPUapp.getSeq()); 
     std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";  
+    return 0;
 #endif
 
 #ifdef STD
@@ -37,8 +29,18 @@ int main () try {
     std::chrono::duration<double> elapsed_seconds = end - start;
     outputSequence (sequence);
     std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";  
+    return 0;
 
 #endif
+
+    std::cout << "\t\t\t###GPU-SORT" << std::endl;
+
+    BitonicSort::GPUSortApp<int> GPUapp(sequence, "../kernels/kernel.cl");
+    auto elapsed_seconds = GPUapp.run();
+
+    outputSequence (GPUapp.getSeq()); 
+    std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";
+
     return 0;
 }
 
