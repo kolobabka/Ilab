@@ -8,12 +8,18 @@
 ---
 ---
 ## If you have some troubles with building the project, try to install GoogleTests:
+#Ubuntu:
 ```
   $ sudo apt-get install libgtest-dev
   $ cd /usr/src/gtest
   $ sudo cmake CMakeLists.txt
   $ sudo make
 ```
+#Arch:
+```
+  $ sudo pacman -S gtest
+```
+
 ## Compiler settings:
 ```
   $ g++ -Wall -Wextra -Wpedantic -O2

@@ -15,31 +15,28 @@
         return;                                     \
     }
 
+#define CHECK() const std::vector<int>& sortSeq = testApp.getSeq(); \
+        int prev = sortSeq[0]; \
+        int cur  = 0;          \
+        for (size_t i = 1; i < sortSeq.size(); ++i) { \
+            cur = sortSeq[i]; \
+            ASSERT_GE (cur, prev); \
+        }
 //----------------------------------------
 //----------------------------------------
 namespace {
 
-#if 0
-    void simpTestSorting (FILE* ftest) try {
+#if 1
+    void CPUTestSorting (FILE* ftest) try {
 
         std::vector<int> seq;
         inputSequence<int> (seq);
 
-        BitonicSort::GPUApp<int> testApp (seq, "../kernels/kernel.cl");
+        BitonicSort::CPUSortApp<int> testApp (seq);
         auto time = testApp.run();
 
         CLOSE_FD (ftest);
-
-        const std::vector<int>& sortSeq = testApp.getSeq();
-
-        int prev = sortSeq[0];
-        int cur  = 0;
-
-        for (size_t i = 1; i < sortSeq.size(); ++i) {
-            
-            cur = sortSeq[i];
-            ASSERT_GE (cur, prev);
-        }
+        CHECK();
     }
     catch (std::exception &err) {
 
@@ -49,26 +46,17 @@ namespace {
     }
 #endif
 
-    void parTestSorting (FILE* ftest) try {
+#if 1
+    void GPUTestSorting (FILE* ftest) try {
 
         std::vector<int> seq;
         inputSequence<int> (seq);
 
-        BitonicSort::GPUApp<int> testApp (seq, "../kernels/kernel.cl");
+        BitonicSort::GPUSortApp<int> testApp (seq, "../kernels/kernel.cl");
         auto time = testApp.run();
 
         CLOSE_FD (ftest);
-
-        const std::vector<int>& sortSeq = testApp.getSeq();
-
-        int prev = sortSeq[0];
-        int cur  = 0;
-
-        for (size_t i = 1; i < sortSeq.size(); ++i) {
-            
-            cur = sortSeq[i];
-            ASSERT_GE (cur, prev);
-        }
+        CHECK();
     }
     catch (std::exception &err) {
 
@@ -76,60 +64,116 @@ namespace {
 
         std::cout << "Caught exception: " << err.what() << std::endl;
     }
+#endif
 }
 //######################################################################################################
 //######################################################################################################
 //                                      Test of GPU_SORT
 //######################################################################################################
 //######################################################################################################
-
-TEST( parTestSorting, test1 ) {
+#if 1
+TEST( GPUTestSorting, test1 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/001.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test2 ) {
+TEST( GPUTestSorting, test2 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/002.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test3 ) {
+TEST( GPUTestSorting, test3 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/003.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test4 ) {
+TEST( GPUTestSorting, test4 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/004.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test5 ) {
+TEST( GPUTestSorting, test5 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/005.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test6 ) {
+TEST( GPUTestSorting, test6 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/006.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test7 ) {
+TEST( GPUTestSorting, test7 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/007.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
 
-TEST( parTestSorting, test8 ) {
+TEST( GPUTestSorting, test8 ) {
 
     FILE* ftest = CHANGE_STREAM("../tests/008.dat");
-    parTestSorting (ftest);
+    GPUTestSorting (ftest);
 }
+#endif
+//######################################################################################################
+//######################################################################################################
+//                                      Test of CPU_SORT
+//######################################################################################################
+//######################################################################################################
+#if 1
+TEST( CPUTestSorting, test1 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/001.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test2 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/002.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test3 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/003.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test4 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/004.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test5 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/005.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test6 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/006.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test7 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/007.dat");
+    CPUTestSorting (ftest);
+}
+
+TEST( CPUTestSorting, test8 ) {
+
+    FILE* ftest = CHANGE_STREAM("../tests/008.dat");
+    CPUTestSorting (ftest);
+}
+#endif
 //----------------------------------------
 //----------------------------------------
 int main (int argc, char** argv) {

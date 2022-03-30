@@ -24,8 +24,6 @@ void inputSequence (std::vector<Type> &seq) {
 
     seq.reserve(lenght);
 
-    std::cout << "lenght = " << lenght << std::endl;
-
     for (size_t i = 0; i < lenght; ++i) {
         
         Type val;

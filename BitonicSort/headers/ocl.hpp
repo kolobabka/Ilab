@@ -22,12 +22,14 @@
 #define ANALYZE 0
 #endif
 
+#ifdef DEBUG
+#define ANALYZE 1
+#endif
+
 #define dbgs                                                                   \
   if (!ANALYZE) {                                                              \
   } else                                                                       \
     std::cout
-
-#define PARALLEL
 //----------------------------------------
 //----------------------------------------
 namespace OCL {

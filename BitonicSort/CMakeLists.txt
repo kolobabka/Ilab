@@ -39,10 +39,12 @@ target_include_directories(${TEST_FILE} PRIVATE headers "${GTEST_INCLUDE_DIRS}")
 target_link_libraries(${TEST_FILE} PRIVATE "${GTEST_LIBRARIES}" "pthread" OpenCL::OpenCL)
 
 
-target_compile_definitions(${TEST_FILE} PRIVATE DEBUG)
+if (CPU)
+    target_compile_definitions(${EXEC_FILE} PRIVATE CPU)
+endif()
 
-if (SIMPLE)
-    target_compile_definitions(${EXEC_FILE} PRIVATE SIMPLE)
+if (GPU)
+    target_compile_definitions(${EXEC_FILE} PRIVATE GPU)
 endif()
 
 if (STD)

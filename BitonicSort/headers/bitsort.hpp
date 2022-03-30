@@ -49,7 +49,7 @@ namespace BitonicSort {
     };
 
     template <typename Type>
-    class GPUApp final : public IApp<Type> {
+    class GPUSortApp final : public IApp<Type> {
 
         OCL::OclApp<Type> app_;
         using IApp<Type>::sequence_;
@@ -91,23 +91,22 @@ namespace BitonicSort {
             event.wait();
         }
     public:
-        GPUApp (const std::vector<Type> &seq, std::string kernelPath) : IApp<Type>(seq), app_(kernelPath) {}    
+        GPUSortApp (const std::vector<Type> &seq, std::string kernelPath) : IApp<Type>(seq), app_(kernelPath) {}    
 
         std::chrono::duration<double> run () override { 
 
-            possibleExtention ();
-
             auto start = std::chrono::steady_clock::now ();
+            possibleExtention ();
             parallelSort ();
+            possibleErase ();
             auto end = std::chrono::steady_clock::now ();
 
-            possibleErase ();
             return end - start;      
         }
     };
 
     template <typename Type> 
-    class CPUApp final : public IApp<Type> {
+    class CPUSortApp final : public IApp<Type> {
 
         using IApp<Type>::sequence_;
         using IApp<Type>::lenght_;
@@ -184,17 +183,16 @@ namespace BitonicSort {
         }   
     public:
 
-        CPUApp (const std::vector<Type> &seq) : IApp<Type>(seq) {}  
+        CPUSortApp (const std::vector<Type> &seq) : IApp<Type>(seq) {}  
 
         std::chrono::duration<double> run () override { 
 
-            possibleExtention ();
-
             auto start = std::chrono::steady_clock::now ();
+            possibleExtention ();
             bitonicSort();
+            possibleErase ();
             auto end = std::chrono::steady_clock::now ();
             
-            possibleErase ();
             return end - start;      
         } 
     };
