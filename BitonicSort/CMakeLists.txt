@@ -12,13 +12,14 @@ find_package(OpenCL REQUIRED)
 
 set (HEADERS
 
+headers/ocl.hpp
 headers/bitsort.hpp
+headers/common.hpp
 )
 
 set (SOURCES
 
 sources/main.cpp
-
 )
 
 set (TESTS

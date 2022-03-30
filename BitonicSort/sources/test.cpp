@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "bitsort.hpp"
 #include <gtest/gtest.h>
 //----------------------------------------
@@ -21,20 +22,22 @@ namespace {
 #if 0
     void simpTestSorting (FILE* ftest) try {
 
+        std::vector<int> seq;
+        inputSequence<int> (seq);
 
-        BitonicSort::App<int> testApp ("../kernels/kernel.cl");
+        BitonicSort::GPUApp<int> testApp (seq, "../kernels/kernel.cl");
         auto time = testApp.run();
 
         CLOSE_FD (ftest);
 
-        std::vector<int>& seq = testApp.getSeq();
+        const std::vector<int>& sortSeq = testApp.getSeq();
 
-        int prev = seq[0];
+        int prev = sortSeq[0];
         int cur  = 0;
 
-        for (size_t i = 1; i < seq.size(); ++i) {
+        for (size_t i = 1; i < sortSeq.size(); ++i) {
             
-            cur = seq[i];
+            cur = sortSeq[i];
             ASSERT_GE (cur, prev);
         }
     }
@@ -48,20 +51,22 @@ namespace {
 
     void parTestSorting (FILE* ftest) try {
 
+        std::vector<int> seq;
+        inputSequence<int> (seq);
 
-        BitonicSort::App<int> testApp ("../kernels/kernel.cl");
+        BitonicSort::GPUApp<int> testApp (seq, "../kernels/kernel.cl");
         auto time = testApp.run();
 
         CLOSE_FD (ftest);
 
-        std::vector<int>& seq = testApp.getSeq();
+        const std::vector<int>& sortSeq = testApp.getSeq();
 
-        int prev = seq[0];
+        int prev = sortSeq[0];
         int cur  = 0;
 
-        for (size_t i = 1; i < seq.size(); ++i) {
+        for (size_t i = 1; i < sortSeq.size(); ++i) {
             
-            cur = seq[i];
+            cur = sortSeq[i];
             ASSERT_GE (cur, prev);
         }
     }
