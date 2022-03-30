@@ -36,10 +36,10 @@ int main () try {
     std::cout << "\t\t\t###GPU-SORT" << std::endl;
 
     BitonicSort::GPUSortApp<int> GPUapp(sequence, "../kernels/kernel.cl");
-    auto elapsed_seconds = GPUapp.run();
+    auto seconds = GPUapp.run();
 
     outputSequence (GPUapp.getSeq()); 
-    std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";
+    std::cout << "elapsed time: " << seconds.count () << "s\n";
 
     return 0;
 }

@@ -59,17 +59,8 @@ if (STD)
     target_compile_definitions(${EXEC_FILE} PRIVATE STD)
 endif()
 
-set(COMPILER_SETTINGS
-
-    -Wall
-    -Wextra
-    -Wpedantic
-
-    -O2
-)
-
-target_compile_options(${EXEC_FILE} PRIVATE ${COMPILER_SETTINGS})
-
 if (DEBUG)
-target_compile_options(${TEST_FILE} PRIVATE ${COMPILER_SETTINGS})
+target_compile_features(${TEST_FILE} PRIVATE cxx_std_17)
 endif ()
+
+target_compile_features(${EXEC_FILE} PRIVATE cxx_std_17)
