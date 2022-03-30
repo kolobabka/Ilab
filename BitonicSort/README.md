@@ -44,7 +44,7 @@ cmake -DCPU=off -DSTD=on ..
 ---
 ## Compiler settings:
 ```
-  $ g++ -Wall -Wextra -Wpedantic -O2
+  $ cxx_std_17
 ```
 ---
 ---
