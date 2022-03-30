@@ -21,7 +21,13 @@ cmake -DCPU=off -DSTD=on ..
   $ cmake -DDebug..
   $ make
 ```
-## Make sure you have OpenCL installed!
+---
+## Notes:
+* if you have Nvidia video card try:
+```
+  $ cmake -DNVIDIA .. 
+```
+* Make sure you have OpenCL installed!
 ---
 ## If you have some troubles with building the project, try to install GoogleTests:
 #Ubuntu:

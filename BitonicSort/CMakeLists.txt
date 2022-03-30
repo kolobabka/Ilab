@@ -47,6 +47,9 @@ target_include_directories(${TEST_FILE} PRIVATE headers "${GTEST_INCLUDE_DIRS}")
 target_link_libraries(${TEST_FILE} PRIVATE "${GTEST_LIBRARIES}" "pthread" OpenCL::OpenCL)
 endif ()
 
+if (NVIDIA)
+    target_compile_definitions(${EXEC_FILE} PRIVATE NVIDIA)
+endif()
 
 if (CPU)
     target_compile_definitions(${EXEC_FILE} PRIVATE CPU)
@@ -55,7 +58,6 @@ endif()
 if (STD)
     target_compile_definitions(${EXEC_FILE} PRIVATE STD)
 endif()
-
 
 set(COMPILER_SETTINGS
 
