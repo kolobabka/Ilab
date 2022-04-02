@@ -37,13 +37,33 @@ namespace {
 
         CLOSE_FD (ftest);
         CHECK();
+	//return 0;
     }
-    catch (std::exception &err) {
+    catch (cl::BuildError &err) {
 
-        CLOSE_FD (ftest);
+    std::cerr << "OCL BUILD ERROR: " << err.err() << ":" << err.what()
+            << std::endl;
+    std::cerr << "-- Log --\n";
+    for (auto e : err.getBuildLog())
+    std::cerr << e.second;
+    std::cerr << "-- End log --\n";
+    //return -1;
+} 
+catch (cl::Error &err) {
 
-        std::cout << "Caught exception: " << err.what() << std::endl;
-    }
+    std::cerr << "OCL ERROR: " << err.err() << ":" << err.what() << std::endl;
+    //return -1;
+} 
+catch (std::runtime_error &err) {
+
+    std::cerr << "RUNTIME ERROR: " << err.what() << std::endl;
+    //return -1;
+} 
+catch (...) {
+
+    std::cerr << "UNKNOWN ERROR\n";
+    //return -1;
+}
 #endif
 
 #if 1
@@ -58,12 +78,31 @@ namespace {
         CLOSE_FD (ftest);
         CHECK();
     }
-    catch (std::exception &err) {
+    catch (cl::BuildError &err) {
 
-        CLOSE_FD (ftest);
+    std::cerr << "OCL BUILD ERROR: " << err.err() << ":" << err.what()
+            << std::endl;
+    std::cerr << "-- Log --\n";
+    for (auto e : err.getBuildLog())
+    std::cerr << e.second;
+    std::cerr << "-- End log --\n";
+    //return -1;
+} 
+catch (cl::Error &err) {
 
-        std::cout << "Caught exception: " << err.what() << std::endl;
-    }
+    std::cerr << "OCL ERROR: " << err.err() << ":" << err.what() << std::endl;
+    //return -1;
+} 
+catch (std::runtime_error &err) {
+
+    std::cerr << "RUNTIME ERROR: " << err.what() << std::endl;
+    //return -1;
+} 
+catch (...) {
+
+    std::cerr << "UNKNOWN ERROR\n";
+    //return -1;
+}
 #endif
 }
 //######################################################################################################
