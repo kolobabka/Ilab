@@ -40,7 +40,6 @@ namespace OCL {
     template <> const std::string getFunction<char>             ()                   {return "bitonic_merge_char";  }
     template <> const std::string getFunction<int>              ()                   {return "bitonic_merge_int";   }
     template <> const std::string getFunction<float>            ()                   {return "bitonic_merge_float"; }
-    template <> const std::string getFunction<double>           ()                   {return "bitonic_merge_double";}
 
     template <typename Type> 
     struct OclApp final {
