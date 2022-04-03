@@ -9,12 +9,13 @@
 //----------------------------------------
 //----------------------------------------
 #ifndef CL_HPP_TARGET_OPENCL_VERSION
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-#define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 200
+#define CL_HPP_TARGET_OPENCL_VERSION 200
 #endif
 
 #define CL_HPP_CL_1_2_DEFAULT_BUILD
 #define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_QUEUE_PROFILING_ENABLE
 
 #include "CL/opencl.hpp"
 
@@ -56,7 +57,7 @@ namespace OCL {
         const cl::string name_;
         const cl::string profile_;
 
-        OclApp (std::string kernelPath) : platform_(selectPlatform()), context_(getGPUContext(platform_())), queue_(context_), 
+        OclApp (std::string kernelPath) : platform_(selectPlatform()), context_(getGPUContext(platform_())), queue_(context_, CL_QUEUE_PROFILING_ENABLE), 
                                           name_(platform_.getInfo<CL_PLATFORM_NAME>()), profile_(platform_.getInfo<CL_PLATFORM_PROFILE>()) { //!TODO: Throw exception if kernel is unavailable 
             
             std::fstream file (kernelPath, std::ios_base::in);

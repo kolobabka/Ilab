@@ -44,11 +44,12 @@ namespace BitonicSort {
 //                                           GPU_SORT
 //######################################################################################################
 //######################################################################################################
-        void kernelSort () {
+        size_t kernelSort () {
             
             size_t seqSize = sequence_.size();
             size_t subSeqSize   = 1;
             size_t middle = seqSize / 2;
+            size_t GPUTime = 0; 
 
             Type* sequence = sequence_.data();
 
@@ -62,23 +63,24 @@ namespace BitonicSort {
 
             for (; subSeqSize <= middle; subSeqSize *= 2) 
                 for (size_t step = subSeqSize; step >= 1; step /= 2) 
-                    bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
+                    GPUTime += bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
 
             cl::copy (app_.queue_, seq_, sequence, sequence + seqSize);
+            return GPUTime;
         }
 
-        void bitonicMerge (cl::Buffer &seq_, size_t subSeqSize, size_t step,  merge_t &merge_seq, cl::EnqueueArgs &args) {
+        size_t bitonicMerge (cl::Buffer &seq_, size_t subSeqSize, size_t step,  merge_t &merge_seq, cl::EnqueueArgs &args) {
             
             cl_ulong GPUTimeStart, GPUTimeFin;
-            long Dur, GDur;
+            long GPUTime;
 
-            std::cout << "GPU wall time measured: " << Dur << " ms" << std::endl;
             cl::Event event = merge_seq (args, seq_, subSeqSize * 2, step);
+            event.wait();
+
             GPUTimeStart = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
             GPUTimeFin = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
-            GDur = (GPUTimeFin - GPUTimeStart) / 1000000; // ns -> ms
-            std::cout << "GPU pure time measured: " << GDur << " ms" << std::endl;
-            event.wait();
+            GPUTime = (GPUTimeFin - GPUTimeStart); // ns -> ms
+            return GPUTime;
         }
     public:
         GPUSortApp (std::string kernelPath) : app_(kernelPath) {}    
@@ -93,9 +95,11 @@ namespace BitonicSort {
 
             auto startTime = std::chrono::steady_clock::now ();
             possibleExtention ();
-            kernelSort ();
+            size_t GPUTime = kernelSort ();
             possibleErase ();
             auto endTime = std::chrono::steady_clock::now ();
+
+            std::cout << "GPU pure time measured: " << GPUTime << " ns" << std::endl;
 
             return endTime - startTime;      
         }

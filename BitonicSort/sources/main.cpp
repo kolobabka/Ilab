@@ -28,14 +28,14 @@ int main () try {
 
     std::cout << KERNEL << std::endl;
     BitonicSort::GPUSortApp<int> GPUapp(KERNEL);
-// #else
-//     BitonicSort::GPUSortApp<int> GPUapp("../kernels/kernel.cl");
+#else
+    BitonicSort::GPUSortApp<int> GPUapp("../kernels/kernel.cl");
 #endif
 
 
     auto seconds = GPUapp.sort(sequence.begin(), sequence.end());
 
-    outputSequence (GPUapp.getSeq()); 
+    // outputSequence (GPUapp.getSeq()); 
     std::cout << "elapsed time: " << seconds.count () << "s\n";
 
     return 0;
