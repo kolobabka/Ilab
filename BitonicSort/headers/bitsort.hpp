@@ -13,13 +13,13 @@
 //----------------------------------------
 //----------------------------------------
 namespace BitonicSort {
-
     template <typename Type>
-    class IApp {
-
-    protected:
+    class GPUSortApp final {
+        
         std::vector<Type> sequence_;
         size_t lenght_ = 0;
+        OCL::OclApp<Type> app_;
+     	using merge_t = cl::KernelFunctor<cl::Buffer, cl_int, cl_int>;
 
         void possibleErase () {
 
@@ -39,32 +39,14 @@ namespace BitonicSort {
                     sequence_.push_back (max);
             }
         }
-
-    public:
-        IApp (const std::vector<Type> &seq) : sequence_(seq), lenght_(sequence_.size()) {} 
-        const std::vector<Type> & getSeq () const { return sequence_; }
-
-        virtual std::chrono::duration<double> run () = 0;       
-        virtual ~IApp () {}
-    };
-
-    template <typename Type>
-    class GPUSortApp final : public IApp<Type> {
-
-        OCL::OclApp<Type> app_;
-        using IApp<Type>::sequence_;
-        using IApp<Type>::lenght_;
-        using IApp<Type>::possibleErase;
-        using IApp<Type>::possibleExtention;
-     	using merge_t = cl::KernelFunctor<cl::Buffer, cl_int, cl_int>;
 //######################################################################################################
 //######################################################################################################
 //                                           GPU_SORT
 //######################################################################################################
 //######################################################################################################
-        void parallelSort () {
+        void kernelSort () {
             
-            size_t seqSize = sequence_.size ();
+            size_t seqSize = sequence_.size();
             size_t subSeqSize   = 1;
             size_t middle = seqSize / 2;
 
@@ -74,7 +56,7 @@ namespace BitonicSort {
             cl::copy(app_.queue_, sequence, sequence + seqSize, seq_);
 
             cl::Program program (app_.context_, app_.kernel_, true); 
-            cl::NDRange globalRange (seqSize);
+            cl::NDRange globalRange = seqSize;
             cl::EnqueueArgs args (app_.queue_, globalRange);
             merge_t merge_seq (program, OCL::getFunction<Type>());
 
@@ -86,115 +68,37 @@ namespace BitonicSort {
         }
 
         void bitonicMerge (cl::Buffer &seq_, size_t subSeqSize, size_t step,  merge_t &merge_seq, cl::EnqueueArgs &args) {
+            
+            cl_ulong GPUTimeStart, GPUTimeFin;
+            long Dur, GDur;
 
+            std::cout << "GPU wall time measured: " << Dur << " ms" << std::endl;
             cl::Event event = merge_seq (args, seq_, subSeqSize * 2, step);
+            GPUTimeStart = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+            GPUTimeFin = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+            GDur = (GPUTimeFin - GPUTimeStart) / 1000000; // ns -> ms
+            std::cout << "GPU pure time measured: " << GDur << " ms" << std::endl;
             event.wait();
         }
     public:
-        GPUSortApp (const std::vector<Type> &seq, std::string kernelPath) : IApp<Type>(seq), app_(kernelPath) {}    
+        GPUSortApp (std::string kernelPath) : app_(kernelPath) {}    
 
-        std::chrono::duration<double> run () override { 
+        const std::vector<Type> & getSeq () const { return sequence_; }
 
-            auto start = std::chrono::steady_clock::now ();
+        template <typename RandomIt> 
+        std::chrono::duration<double> sort (RandomIt begin, RandomIt end) {     
+
+            sequence_ = std::vector(begin, end);       
+            lenght_ = sequence_.size();
+
+            auto startTime = std::chrono::steady_clock::now ();
             possibleExtention ();
-            parallelSort ();
+            kernelSort ();
             possibleErase ();
-            auto end = std::chrono::steady_clock::now ();
+            auto endTime = std::chrono::steady_clock::now ();
 
-            return end - start;      
+            return endTime - startTime;      
         }
-    };
-
-    template <typename Type> 
-    class CPUSortApp final : public IApp<Type> {
-
-        using IApp<Type>::sequence_;
-        using IApp<Type>::lenght_;
-        using IApp<Type>::possibleErase;
-        using IApp<Type>::possibleExtention;
-
-//######################################################################################################
-//######################################################################################################
-//                                          CPU_SORT
-//######################################################################################################
-//######################################################################################################
-        void bitonicSort () {  
-
-            size_t seqSize = sequence_.size ();
-            size_t step = 1;
-            size_t middle = seqSize / 2;
-
-            while (step <= middle) {
-                
-                makeSubSeqBitonic (seqSize, step); 
-                step *= 2;
-            }
-
-            bitonicSplit (seqSize);
-        }
-
-        void bitonicSplit (size_t seqSize) {
-            
-            const size_t middle = seqSize / 2;
-
-            for (size_t i = 0; i < middle; ++i) {
-
-                if (sequence_[i] > sequence_[i + middle])
-                    std::swap (sequence_[i], sequence_[i + middle]);
-            }
-        }    
-
-        void makeSubSeqBitonic (size_t seqSize, size_t step) { 
-
-            size_t cur    = 0;
-            size_t stStep = step;
-            size_t border = stStep;
-            bool upORdown = true;   //true --> up  
-
-            while (step >= 1) {
-            
-                if (!stStep) {
-
-                    upORdown = !upORdown;
-                    stStep = border;
-                }
-                --stStep;
-
-                if (cur + step >= seqSize) {
-
-                    cur = 0;
-                    step /= 2;
-                    stStep = border;
-                    upORdown = true;
-                    continue;
-                }
-
-                Type &curElem = sequence_[cur];
-                Type &toSwap  = sequence_[cur + step];
-
-                if ((curElem > toSwap) == upORdown)
-                    std::swap (curElem, toSwap);
-
-                if ((cur + 1) % step == 0)                
-                    cur += step;
-
-                ++cur;
-            }
-        }   
-    public:
-
-        CPUSortApp (const std::vector<Type> &seq) : IApp<Type>(seq) {}  
-
-        std::chrono::duration<double> run () override { 
-
-            auto start = std::chrono::steady_clock::now ();
-            possibleExtention ();
-            bitonicSort();
-            possibleErase ();
-            auto end = std::chrono::steady_clock::now ();
-            
-            return end - start;      
-        } 
     };
 }
 
