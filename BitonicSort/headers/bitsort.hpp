@@ -13,6 +13,13 @@
 //----------------------------------------
 //----------------------------------------
 namespace BitonicSort {
+
+    struct TotalTime {
+
+        long CPUTime;
+        size_t GPUTime;
+    };
+
     template <typename Type>
     class GPUSortApp final {
         
@@ -88,20 +95,21 @@ namespace BitonicSort {
         const std::vector<Type> & getSeq () const { return sequence_; }
 
         template <typename RandomIt> 
-        std::chrono::duration<double> sort (RandomIt begin, RandomIt end) {     
+        TotalTime sort (RandomIt begin, RandomIt end) {     
 
             sequence_ = std::vector(begin, end);       
             lenght_ = sequence_.size();
 
-            auto startTime = std::chrono::steady_clock::now ();
+            auto startTime = std::chrono::high_resolution_clock::now();
             possibleExtention ();
             size_t GPUTime = kernelSort ();
             possibleErase ();
-            auto endTime = std::chrono::steady_clock::now ();
+            auto endTime = std::chrono::high_resolution_clock::now();
+        
+            TotalTime time {std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count(), GPUTime / 1000000};
+            // std::cout << "GPU pure time measured: " << GPUTime << " ns" << std::endl;
 
-            std::cout << "GPU pure time measured: " << GPUTime << " ns" << std::endl;
-
-            return endTime - startTime;      
+            return time;      
         }
     };
 }

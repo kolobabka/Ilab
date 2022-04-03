@@ -33,10 +33,11 @@ int main () try {
 #endif
 
 
-    auto seconds = GPUapp.sort(sequence.begin(), sequence.end());
+    BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end());
 
     // outputSequence (GPUapp.getSeq()); 
-    std::cout << "elapsed time: " << seconds.count () << "s\n";
+    std::cout << "CPU time: " << seconds.CPUTime << "ms\n";
+    std::cout << "GPU time: " << seconds.GPUTime << "ms\n";
 
     return 0;
 }
