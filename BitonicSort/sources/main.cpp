@@ -15,7 +15,7 @@ int main () try {
 #else
     BitonicSort::GPUSortApp<int> GPUapp("../kernels/kernel.cl");
 #endif
-    BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end());
+    BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end()); //begin, end, work-group-size (has a default value)
 
     outputSequence (GPUapp.getSeq()); 
     std::cout << "CPU time: " << seconds.CPUTime << "ms\n";

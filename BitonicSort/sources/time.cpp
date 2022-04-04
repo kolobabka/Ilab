@@ -9,14 +9,14 @@ int main () try {
     std::cout << "\t\tSize of input array: [" << sequence.size() <<"]\n" << std::endl;
 
     std::cout << "\t\t\t###GPU-SORT###" << std::endl;
-    
+
 #ifdef KERNEL
     BitonicSort::GPUSortApp<int> GPUapp(KERNEL);
 #else
     BitonicSort::GPUSortApp<int> GPUapp("../kernels/kernel.cl");
 #endif
 
-    BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end());
+    BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end()); //begin, end, work-group-size (has a default value)
 
     std::cout << "CPU time: " << seconds.CPUTime << "ms\n";
     std::cout << "GPU time: " << seconds.GPUTime << "ms\n";
