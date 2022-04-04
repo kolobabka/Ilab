@@ -8,6 +8,9 @@ int main () try {
     std::vector<int> sequence;
     inputSequence<int> (sequence);
 
+
+    std::cout << "\t\t\t###GPU-SORT" << std::endl;
+    
 #ifdef STD
     std::cout << "\t\t\t###STD-SORT" << std::endl;
 
@@ -21,8 +24,6 @@ int main () try {
     return 0;
 
 #endif
-
-    std::cout << "\t\t\t###GPU-SORT" << std::endl;
 
 #ifdef KERNEL
 
