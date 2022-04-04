@@ -10,6 +10,8 @@
 #include <chrono>
 #include <cmath>
 #include "ocl.hpp"
+
+#define DEFAULT_SIZE 256
 //----------------------------------------
 //----------------------------------------
 namespace BitonicSort {
@@ -51,7 +53,7 @@ namespace BitonicSort {
 //                                           GPU_SORT
 //######################################################################################################
 //######################################################################################################
-        size_t kernelSort () {
+        size_t kernelSort (const cl::NDRange &groupSize) {
             
             size_t seqSize = sequence_.size();
             size_t subSeqSize   = 1;
@@ -65,32 +67,15 @@ namespace BitonicSort {
 
         #if 1
             cl::Program program (app_.context_, app_.kernel_, true); 
-            cl::NDRange globalRange = seqSize / 2;
-            cl::NDRange localRange = 1;
+            cl::NDRange globalRange = seqSize;
 
-            cl::EnqueueArgs args (app_.queue_, globalRange , localRange);
+            cl::EnqueueArgs args (app_.queue_, globalRange, groupSize);
             merge_t merge_seq (program, OCL::getFunction<Type>());
 
             for (; subSeqSize <= middle; subSeqSize *= 2) 
                 for (size_t step = subSeqSize; step >= 1; step /= 2) 
                     GPUTime += bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
             
-        #endif
-
-        #if 0
-        
-            cl::Program program (app_.context_, app_.kernel_, true); 
-            cl::NDRange globalRange = seqSize;
-            merge_t merge_seq (program, OCL::getFunction<Type>());
-
-            for (; subSeqSize <= middle; subSeqSize *= 2) 
-                for (size_t step = subSeqSize; step >= 1; step /= 2) {
-                    
-                    cl::NDRange localRange = step * 2;
-                    cl::EnqueueArgs args (app_.queue_, globalRange, localRange);
-                    GPUTime += bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
-                }
-
         #endif
 
             cl::copy (app_.queue_, seq_, sequence, sequence + seqSize);
@@ -107,7 +92,7 @@ namespace BitonicSort {
 
             GPUTimeStart = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
             GPUTimeFin = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
-            GPUTime = (GPUTimeFin - GPUTimeStart); // ns -> ms
+            GPUTime = (GPUTimeFin - GPUTimeStart); 
             return GPUTime;
         }
     public:
@@ -116,20 +101,19 @@ namespace BitonicSort {
         const std::vector<Type> & getSeq () const { return sequence_; }
 
         template <typename RandomIt> 
-        TotalTime sort (RandomIt begin, RandomIt end) {     
+        TotalTime sort (RandomIt begin, RandomIt end, cl::NDRange groupSize = DEFAULT_SIZE) {     
 
             sequence_ = std::vector(begin, end);       
             lenght_ = sequence_.size();
 
             auto startTime = std::chrono::high_resolution_clock::now();
             possibleExtention ();
-            size_t GPUTime = kernelSort ();
+            size_t GPUTime = kernelSort (groupSize);
             possibleErase ();
             auto endTime = std::chrono::high_resolution_clock::now();
         
-            TotalTime time {std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count(), GPUTime / 1000000};
-            // std::cout << "GPU pure time measured: " << GPUTime << " ns" << std::endl;
-
+            TotalTime time {std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count(), 
+                            GPUTime / 1000000}; // ns -> ms
             return time;      
         }
     };

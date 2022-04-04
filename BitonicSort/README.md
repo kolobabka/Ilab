@@ -3,24 +3,20 @@
 ```
   $ mkdir build
   $ cd build
-  $ cmake ..
+  $ cmake -DKERNEL=$SRC/kernels/kernel.cl ..
   $ make
 ```
-* Note: You also have an opportunity to run simple bitonic sort on CPU or even std::sort. To do it run *cmake* with relevants parameters below:
-```
-cmake -DCPU=on -DSTD=off ..   
-```
-OR
-```
-cmake -DCPU=off -DSTD=on ..   
-```
+* Note: Default path to the kernel is "../kernels/kernel.cl"
+
+* Note: You also have an opportunity to compare its performance with std::sort. To do it run *time_profile* with your test in input
 ## Debug:
 ```
   $ mkdir build
   $ cd build
-  $ cmake -DDebug..
+  $ cmake -DDebug=on ..
   $ make
 ```
+### Run *tests* to check the correctness
 ---
 ## Notes:
 * if you have Nvidia video card try:
@@ -29,26 +25,12 @@ cmake -DCPU=off -DSTD=on ..
 ```
 * Make sure you have OpenCL installed!
 ---
-## If you have some troubles with building the project, try to install GoogleTests:
-#Ubuntu:
-```
-  $ sudo apt-get install libgtest-dev
-  $ cd /usr/src/gtest
-  $ sudo cmake CMakeLists.txt
-  $ sudo make
-```
-#Arch:
-```
-  $ sudo pacman -S gtest
-```
----
 ## Compiler settings:
 ```
   $ cxx_std_17
 ```
 ---
----
-### In the folder 'build' executiable files 'bitonic_sort' and  test-file 'tests' (with -DDebug) will appear
+### In the folder 'build' executiable files 'bitonic_sort', 'time_profile' and  test-file 'tests' (with -DDebug) will appear
 ---
 ## Input data: 
 * **N** --- size of a sequence
@@ -58,7 +40,13 @@ cmake -DCPU=off -DSTD=on ..
 ### ***example:*** 
 * **INPUT:** ---> 4 5 6 7 1 
 
-* **OUTPUT:** ---> 1 5 6 7 elapsed time: **N**s 
+* **OUTPUT:** ---> 
+
+``` 
+1 5 6 7 
+CPU time: **N**ms
+GPU time: **M**ms 
+```
 
 ---
 # Useful materials: 

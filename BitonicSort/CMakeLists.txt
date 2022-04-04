@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project ("Bitonic Sort" VERSION 1.0.0)
+project ("Bitonic Sort" VERSION 1.0.1)
 
 set (EXEC_FILE "bitonic_sort")
 set (TIME_FILE "time_profile")
@@ -69,10 +69,6 @@ if (NVIDIA)
     if (DEBUG)
         target_compile_definitions(${TEST_FILE} PRIVATE NVIDIA)
     endif()
-endif()
-
-if (STD)
-    target_compile_definitions(${EXEC_FILE} PRIVATE STD)
 endif()
 
 if (DEBUG)

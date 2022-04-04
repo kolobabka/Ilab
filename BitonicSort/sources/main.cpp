@@ -8,23 +8,6 @@ int main () try {
     std::vector<int> sequence;
     inputSequence<int> (sequence);
 
-
-    std::cout << "\t\t\t###GPU-SORT" << std::endl;
-    
-#ifdef STD
-    std::cout << "\t\t\t###STD-SORT" << std::endl;
-
-    auto start = std::chrono::steady_clock::now ();
-    std::sort(sequence.begin(), sequence.end());
-    auto end = std::chrono::steady_clock::now ();
-
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    outputSequence (sequence);
-    std::cout << "elapsed time: " << elapsed_seconds.count () << "s\n";  
-    return 0;
-
-#endif
-
 #ifdef KERNEL
 
     std::cout << KERNEL << std::endl;
@@ -32,8 +15,6 @@ int main () try {
 #else
     BitonicSort::GPUSortApp<int> GPUapp("../kernels/kernel.cl");
 #endif
-
-
     BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end());
 
     outputSequence (GPUapp.getSeq()); 

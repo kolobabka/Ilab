@@ -6,12 +6,11 @@ int main () try {
 
     std::vector<int> sequence;
     inputSequence<int> (sequence);
-    std::cout << "\t\tSize of input array: " << sequence.size() << std::endl;
+    std::cout << "\t\tSize of input array: [" << sequence.size() <<"]\n" << std::endl;
 
     std::cout << "\t\t\t###GPU-SORT###" << std::endl;
+    
 #ifdef KERNEL
-
-    std::cout << KERNEL << std::endl;
     BitonicSort::GPUSortApp<int> GPUapp(KERNEL);
 #else
     BitonicSort::GPUSortApp<int> GPUapp("../kernels/kernel.cl");
