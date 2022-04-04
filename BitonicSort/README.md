@@ -21,7 +21,7 @@
 ## Notes:
 * if you have Nvidia video card try:
 ```
-  $ cmake -DNVIDIA .. 
+  $ cmake -DNVIDIA=on .. 
 ```
 * Make sure you have OpenCL installed!
 ---
