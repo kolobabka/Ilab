@@ -63,14 +63,35 @@ namespace BitonicSort {
             cl::Buffer seq_ (app_.context_, CL_MEM_READ_WRITE, seqSize * sizeof(Type));
             cl::copy(app_.queue_, sequence, sequence + seqSize, seq_);
 
+        #if 1
             cl::Program program (app_.context_, app_.kernel_, true); 
-            cl::NDRange globalRange = seqSize;
-            cl::EnqueueArgs args (app_.queue_, globalRange);
+            cl::NDRange globalRange = seqSize / 2;
+            cl::NDRange localRange = 1;
+
+            cl::EnqueueArgs args (app_.queue_, globalRange , localRange);
             merge_t merge_seq (program, OCL::getFunction<Type>());
 
             for (; subSeqSize <= middle; subSeqSize *= 2) 
                 for (size_t step = subSeqSize; step >= 1; step /= 2) 
                     GPUTime += bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
+            
+        #endif
+
+        #if 0
+        
+            cl::Program program (app_.context_, app_.kernel_, true); 
+            cl::NDRange globalRange = seqSize;
+            merge_t merge_seq (program, OCL::getFunction<Type>());
+
+            for (; subSeqSize <= middle; subSeqSize *= 2) 
+                for (size_t step = subSeqSize; step >= 1; step /= 2) {
+                    
+                    cl::NDRange localRange = step * 2;
+                    cl::EnqueueArgs args (app_.queue_, globalRange, localRange);
+                    GPUTime += bitonicMerge(seq_, subSeqSize, step, merge_seq, args);
+                }
+
+        #endif
 
             cl::copy (app_.queue_, seq_, sequence, sequence + seqSize);
             return GPUTime;

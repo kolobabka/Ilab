@@ -36,7 +36,7 @@ int main () try {
 
     BitonicSort::TotalTime seconds = GPUapp.sort(sequence.begin(), sequence.end());
 
-    // outputSequence (GPUapp.getSeq()); 
+    outputSequence (GPUapp.getSeq()); 
     std::cout << "CPU time: " << seconds.CPUTime << "ms\n";
     std::cout << "GPU time: " << seconds.GPUTime << "ms\n";
 
