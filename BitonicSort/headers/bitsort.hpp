@@ -11,7 +11,7 @@
 #include <cmath>
 #include "ocl.hpp"
 
-#define DEFAULT_SIZE 256
+#define DEFAULT_SIZE 64
 //----------------------------------------
 //----------------------------------------
 namespace BitonicSort {
