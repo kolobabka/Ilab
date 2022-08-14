@@ -1,1 +1,1 @@
-# Knut's represenatation of graph
+# Knuth's represenatation of graph
