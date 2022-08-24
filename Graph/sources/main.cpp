@@ -20,4 +20,21 @@ int main () {
     }
 
     Combinatorics::KnuthsGraph graph{lexer->nums_}; 
+    graph.dump();
+    auto res = graph.checkBipartite();
+    if (res.first) {
+
+        for (auto i = 1; auto color : res.second) {
+
+            if (color == 2) 
+                std::cout << i++ << " b ";
+            else
+                std::cout << i++ << " r ";
+        }
+        std::cout << std::endl;
+    }
+    else {
+        
+        std::cout << "Graph is not bipartite!" << std::endl;
+    }
 }
