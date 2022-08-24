@@ -20,7 +20,7 @@ namespace Combinatorics {
 
         virtual void dump () = 0;
     public:
-        ~IGraph () = default;
+        virtual ~IGraph () = default;
     };
 
     class KnuthsGraph : public IGraph {
