@@ -24,9 +24,11 @@ int main () {
     auto res = graph.checkBipartite();
     if (res.first) {
 
-        for (auto i = 1; auto color : res.second) {
+        int blueColorBase = res.second[0];
 
-            if (color == 2) 
+        for (auto i = 1; auto color : res.second) {
+            
+            if (color == blueColorBase) 
                 std::cout << i++ << " b ";
             else
                 std::cout << i++ << " r ";

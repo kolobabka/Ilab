@@ -101,17 +101,21 @@ namespace Combinatorics {
 
                     while (curEdge != curVert) {
                         
-                        if (colors[graph_[curEdge ^ 1] - 1] == colors[curVert]) 
+                        size_t pairEdge = curEdge ^ 1;
+                        size_t pairVert = graph_[pairEdge] - 1; 
+
+                        if (colors[pairVert] == colors[curVert]) 
                             return std::make_pair (false, std::vector<int>{});
                         
-                        if (graph_[graph_[curEdge ^ 1] - 1]) {
+                        if (graph_[pairVert]) {
 
                             curEdge = graph_[size + curEdge];
                             continue;
                         }
                     
-                        colors[graph_[curEdge ^ 1] - 1] = colors[curVert] ^ 1;
-                        queue.push_back(graph_[curEdge ^ 1]);
+                        colors[pairVert] = colors[curVert] ^ 1;
+                        
+                        queue.push_back(pairVert + 1);
                         curEdge = graph_[size + curEdge];
                     }
                 }
