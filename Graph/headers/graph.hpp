@@ -13,6 +13,7 @@
 #include <cmath>
 #include <initializer_list>
 #include <iomanip>
+#include <stdexcept>
 #include <iterator>
 
 namespace Combinatorics {
@@ -29,12 +30,16 @@ public:
     virtual ~IGraph () = default;
 };
 
+template <typename VLType = int, typename ELType = int>
 class KnuthsGraph : public IGraph {
     
     size_t capVertex_;
     size_t numVertex_;
     size_t numEdges_; 
     std::vector<int> graph_;
+    std::vector<VLType> VLinfo_;
+    std::vector<ELType> ELinfo_;
+
 
     size_t countNumOfUniqueVertex (VecIt start, VecIt end) {
 
@@ -51,7 +56,7 @@ class KnuthsGraph : public IGraph {
     }
 
 public: 
-    KnuthsGraph (const std::initializer_list<std::pair<int, int>> &vertList) {
+    KnuthsGraph (const std::initializer_list<std::pair<int, int>> &vertList, std::vector<VLType> && VLinfo = {}, std::vector<ELType> && ELinfo = {}) {
 
         std::vector<int> uniqueVertex = countUniqueVertex (vertList.begin(), vertList.end());
         size_t numVertex  = uniqueVertex.size();
@@ -66,7 +71,7 @@ public:
         std::fill (tmpGraph.begin(), std::next (tmpGraph.begin(), capVertex), 0);
 
         std::for_each (vertList.begin(), vertList.end(), 
-                       [&tmpGraph, offset = capVertex] (auto pair) mutable {
+                        [&tmpGraph, offset = capVertex] (auto pair) mutable {
 
                             tmpGraph[offset++] = pair.first;
                             tmpGraph[offset++] = pair.second;
@@ -88,16 +93,20 @@ public:
             tmpGraph[2 * size + i] = prevId;
         }   
 
+        if (!VLinfo.empty() && VLinfo.size () != numVertex) 
+            throw std::logic_error ("Not all the verticies have additional information");
+        
+        if (!ELinfo.empty() && ELinfo.size () != vertList.size())
+            throw std::logic_error ("Not all the edges have additional information");
     //  ---------------------------------------------------------------------- The Kalb's line
 
         graph_ = std::move(tmpGraph);
+        // VLinfo_ = std::move (VLinfo);
+        // ELinfo_ = std::move (ELinfo);
         capVertex_ = capVertex;
         numVertex_ = numVertex;
         numEdges_  = numEdges;
     }
-
-    // KnuthsGraph (const std::initializer_list<std::pair<int, int>> &vertList, const std::vector<ELType> &ELinfo) :
-    //              KnuthsGraph (vertList), 
 
     KnuthsGraph (const std::vector<int> &graph) {
         
@@ -131,8 +140,8 @@ public:
                     prevId = j;
                 }
             }
-                tmpGraph[size + prevId] = i;
-                tmpGraph[2 * size + i] = prevId;
+            tmpGraph[size + prevId] = i;
+            tmpGraph[2 * size + i] = prevId;
         }   
 
         graph_.reserve (size * 3);

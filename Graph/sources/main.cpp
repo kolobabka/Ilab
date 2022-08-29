@@ -9,7 +9,7 @@
 #include "customLexer.hpp"
 
 
-int main () {
+int main () try {
 
     std::cout << "\t---Hello, graph!" << std::endl;
 
@@ -19,9 +19,7 @@ int main () {
         
     }
 
-    Combinatorics::KnuthsGraph graph{{1, 2}, {1, 3}, {2, 3}, {2, 4}, {3, 4}}; 
-    graph.dump();
-#if 0
+    Combinatorics::KnuthsGraph<int, int> graph{{{1, 2}, {1, 3}, {2, 3}, {2, 4}, {3, 4}}, {1, 2, 3}, {1, 4, 3}}; 
     graph.dump();
     auto res = graph.checkBipartite();
     if (res.first) {
@@ -41,5 +39,8 @@ int main () {
         
         std::cout << "Graph is not bipartite!" << std::endl;
     }
-#endif
+}
+catch (std::exception &err) {
+
+    std::cout << err.what() << std::endl;
 }
