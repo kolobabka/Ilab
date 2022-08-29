@@ -19,7 +19,9 @@ int main () {
         
     }
 
-    Combinatorics::KnuthsGraph graph{lexer->nums_}; 
+    Combinatorics::KnuthsGraph graph{{1, 2}, {1, 3}, {2, 3}, {2, 4}, {3, 4}}; 
+    graph.dump();
+#if 0
     graph.dump();
     auto res = graph.checkBipartite();
     if (res.first) {
@@ -39,4 +41,5 @@ int main () {
         
         std::cout << "Graph is not bipartite!" << std::endl;
     }
+#endif
 }
