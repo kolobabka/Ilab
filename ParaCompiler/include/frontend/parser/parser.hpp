@@ -6,7 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "common/n_ary_tree.hpp"
+
 #include "lexer.hpp"
+#include "ast.hpp"
 #include "grammar_tab.hh"
 
 namespace yy {
