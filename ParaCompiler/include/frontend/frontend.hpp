@@ -15,5 +15,5 @@ class Frontend {
 public:
     Frontend (const int argc = 0, char **argv_ = nullptr);
 
-    int build_ast ();
+    std::unique_ptr<Tree::NAryTree<AST::Node*>> build_ast ();
 };

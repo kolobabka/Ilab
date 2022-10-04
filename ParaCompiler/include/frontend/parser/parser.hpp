@@ -34,7 +34,7 @@ public:
 
     std::vector<std::string>::const_iterator err_end () const   { return error_.cend ();   }
 
-    bool parse ();
+    std::unique_ptr<Tree::NAryTree<AST::Node*>> parse ();
 };
 
 }  // namespace yy

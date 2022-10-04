@@ -1,3 +1,5 @@
+//TODO: Is it possible to fix leaking of memory after caught error in bison?
+
 %language "c++"
 %skeleton "lalr1.cc"
 
@@ -9,7 +11,7 @@
 %defines
 %define api.value.type variant
 %param {yy::Parser* pars}
-%param {Tree::NAryTree<AST::Node*> &tree}
+%param {std::unique_ptr<Tree::NAryTree<AST::Node*>> &tree}
 
 
 %code requires
@@ -29,7 +31,7 @@
 
     namespace yy {
 
-    parser::token_type yylex(parser::semantic_type* yylval, parser::location_type* location, Parser *pars, Tree::NAryTree<AST::Node*> &tree);
+    parser::token_type yylex(parser::semantic_type* yylval, parser::location_type* location, Parser *pars, std::unique_ptr<Tree::NAryTree<AST::Node*>> &tree);
 
     } //namespace yy
 
@@ -155,16 +157,16 @@ translationStart            :   statementHandler                {
                                                                     if ($1) {
                                                                         for (auto curStmtNode: *($1))             
                                                                         {   
-                                                                            if (!curStmtNode)
+                                                                            if (!curStmtNode) {
                                                                                 continue;
-                                                                            
+                                                                            }
                                                                             globalScope->addChild (curStmtNode);
                                                                         }
                         
                                                                         delete $1;
                                                                     }
-                                                                    tree.setRoot (globalScope);
-                                                                    tree.dump(std::cout);
+                                                                    tree->setRoot (globalScope);
+                                                               
                                                                 };
 
 statementHandler            :   statement                       {
@@ -174,14 +176,14 @@ statementHandler            :   statement                       {
                                                                     } else
                                                                         $$ = nullptr;
                                                                 }
-                            |   statementHandler statement      {
+                            |   statement statementHandler      {
                                                                     if ($1 && $2) {
-                                                                        $1->push_back ($2);
-                                                                        $$ = $1;
+                                                                        $2->push_back ($1);
+                                                                        $$ = $2;
                                                                     } else {
                                                                         $$ = nullptr;
-                                                                        if ($1) {
-                                                                            for (auto v: *($1))
+                                                                        if ($2) {
+                                                                            for (auto v: *($2))
                                                                                 delete v;
                                                                         }
                                                                         delete $1;
@@ -246,7 +248,7 @@ whileStatement              :   WHILE conditionExpression body  {
                                                                 };
 
 conditionExpression         :   OPCIRCBRACK assignStatement CLCIRCBRACK   
-                                                                {  std::cout << "assign" << std::endl; $$ = $2;    }
+                                                                {   $$ = $2;    }
                             |   OPCIRCBRACK error CLCIRCBRACK   {   pars->push_error (@2, "Bad expression for condition");   $$ = nullptr;   };
 
 
@@ -274,6 +276,11 @@ assignment                  :   ID ASSIGN assignStatement SEMICOLON
                                                                     $$ = nullptr;   
                                                                 }
                             |   error ASSIGN assignStatement SEMICOLON 
+                                                                {   
+                                                                    pars->push_error (@1, "rvalue can't become lvalue"); 
+                                                                    $$ = nullptr; 
+                                                                }
+                            |   ID ASSIGN error END 
                                                                 {   
                                                                     pars->push_error (@1, "rvalue can't become lvalue"); 
                                                                     $$ = nullptr; 
@@ -335,12 +342,12 @@ Parser::Parser (const char *input) : lexer_ (std::unique_ptr<Lexer>{new Lexer}) 
     }
 }
 
-bool Parser::parse () {
+std::unique_ptr<Tree::NAryTree<AST::Node*>> Parser::parse () {
     
-    Tree::NAryTree<AST::Node*> tree;
-    parser parser (this, tree);
+    std::unique_ptr<Tree::NAryTree<AST::Node*>> tree(new Tree::NAryTree<AST::Node*>{});
+    parser parser (this, tree); //TODO Think about the first param
     bool res = parser.parse ();
-    return !res;
+    return tree;
 }
 
 parser::token_type Parser::yylex (parser::semantic_type *yylval, parser::location_type *location) {
@@ -381,7 +388,7 @@ void Parser::push_error (yy::location curLocation, const std::string &err)
 }
 
 
-parser::token_type yylex (parser::semantic_type* yylval, parser::location_type* location, Parser* pars, Tree::NAryTree<AST::Node*> &tree) {
+parser::token_type yylex (parser::semantic_type* yylval, parser::location_type* location, Parser* pars, std::unique_ptr<Tree::NAryTree<AST::Node*>> &tree) {
     
     try {
         return pars->yylex (yylval, location);

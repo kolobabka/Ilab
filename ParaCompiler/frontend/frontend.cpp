@@ -18,16 +18,11 @@ Frontend::Frontend (const int argc, char **argv) : argc_(argc), argv_(argv) {
     std::cin.rdbuf (code_.rdbuf ());
 }
 
-int Frontend::build_ast () {
+std::unique_ptr<Tree::NAryTree<AST::Node *>> Frontend::build_ast () try {
 
     yy::Parser parser (argv_[1]);
-    try {
-        parser.parse ();
-    }
-    catch (std::runtime_error &err) {
-        std::cout << err.what () << std::endl;
-        return 0;
-    }
+
+    auto ast = parser.parse ();
 
     auto error_st = parser.err_begin ();
     auto error_fin = parser.err_end ();
@@ -40,7 +35,11 @@ int Frontend::build_ast () {
 
         return 0;
     }
+    ast->dump(std::cout);
 
+    return ast;
+} catch (std::runtime_error &err) {
+    std::cout << err.what () << std::endl;
     return 0;
 }
 

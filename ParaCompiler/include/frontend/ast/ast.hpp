@@ -5,10 +5,31 @@
 
 #include "common/locator.hpp"
 
+#include "llvm/IR/Value.h"
+
 //*****************************************************************************
 //************************* AST NODE DESCRIPTION HERE *************************
 //*****************************************************************************
 namespace AST {
+
+    class Node;
+    class VarNode;
+    class NumNode;
+    class ScopeNode;
+    class OperNode;
+    class CondNode;
+
+    struct Visitor {
+        // virtual llvm::Value* visit (Node *node) = 0;
+        using ret_type = typename llvm::Value*;
+        virtual llvm::Value* visit (VarNode *node) = 0;
+        virtual llvm::Value* visit (NumNode *node) = 0;
+        virtual llvm::Value* visit (OperNode *node) = 0;
+        virtual llvm::Value* visit (CondNode *node) = 0;
+        virtual llvm::Value* visit (ScopeNode *node) = 0;
+
+        virtual ~Visitor() = default;
+    };
 
     enum class NodeT {
         VARIABLE,
@@ -42,6 +63,8 @@ namespace AST {
         Node (Node &&other) = delete;
         Node &operator= (const Node &other) = delete;
         Node &operator= (Node &&other) = delete;
+
+        virtual Visitor::ret_type accept(Visitor &v) = 0;
 
         // If you'd like to inherit from class Node you have to write NodeDump () func;
         virtual void nodeDump (std::ostream &out) const = 0;
@@ -77,9 +100,7 @@ namespace AST {
             return children_.erase (children_.begin () + ind);
         }
     };
-
 }  // namespace AST
-
 //*****************************************************************************
 //**************************** AST Node inheritors ****************************
 //*****************************************************************************
@@ -92,6 +113,10 @@ namespace AST {
         VarNode (const std::string &name, yy::location loc, Node *parent = nullptr)
             : Node (NodeT::VARIABLE, loc, parent), name_ (name)
         {
+        }
+
+        auto accept(Visitor &v) -> decltype (v.visit(this)) override{
+            return v.visit(this);
         }
 
         void nodeDump (std::ostream &out) const override { out << name_; }
@@ -141,6 +166,10 @@ namespace AST {
         {
         }
 
+        auto accept(Visitor &v) -> decltype (v.visit(this)) override{
+            return v.visit(this);
+        }
+
         OperNode (const OperType opType, Node *parent = nullptr) : Node (NodeT::OPERATOR, parent), opType_ (opType) {}
 
         OperType getOpType () const { return opType_; }
@@ -154,6 +183,10 @@ namespace AST {
     public:
         NumNode (const int value = 0, Node *parent = nullptr) : Node (NodeT::NUMBER, parent), value_ (value) {}
 
+        auto accept(Visitor &v) -> decltype (v.visit(this)) override{
+            return v.visit(this);
+        }
+
         void nodeDump (std::ostream &out) const override { out << value_; }
 
         int getValue () const { return value_; }
@@ -163,6 +196,10 @@ namespace AST {
     public:
         ScopeNode (Node *parent = nullptr) : Node (NodeT::SCOPE, parent) {}
         ScopeNode (yy::location loc, Node *parent = nullptr) : Node (NodeT::SCOPE, loc, parent) {}
+
+        auto accept(Visitor &v) -> decltype (v.visit(this)) override{
+            return v.visit(this);
+        }
 
         void nodeDump (std::ostream &out) const override { out << "SCOPE"; }
     };
@@ -185,7 +222,12 @@ namespace AST {
 
         ConditionType getConditionType () const { return condType_; }
 
+        auto accept(Visitor &v) -> decltype (v.visit(this)) override{
+            return v.visit(this);
+        }
+
         void nodeDump (std::ostream &out) const override;
     };
+
 
 }  // namespace AST
