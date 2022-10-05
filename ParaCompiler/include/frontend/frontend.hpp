@@ -5,7 +5,7 @@
 
 #include "parser.hpp"
 
-class Frontend {
+class Frontend final {
 
     int argc_ = 0;
     char** argv_ = nullptr; 

@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) try {
     codegen->StartFunction("__pcl_start");
     codegen->codegen(ast);
     codegen->EndCurrentFunction();
-    codegen->SaveModule("file.pcl");
+    codegen->SaveModule("file.pcl.ll");
 
 } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;

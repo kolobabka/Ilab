@@ -5,16 +5,20 @@
 #include <FlexLexer.h>
 #endif
 #include <vector>
+#include <string>
+#include <utility>
 
 struct GraphLexer final : public yyFlexLexer {
-    std::vector<int> nums_;
+
+    std::vector<std::string> data_;
+
     GraphLexer () = default;
 
-    int pushNumber (const char* num) {
-
-        nums_.push_back(std::stoi(num));
+    int pushData (const char* data) {
+        data_.emplace_back(data);
         return 1;
     }
+
     int yylex () override;
 };
 

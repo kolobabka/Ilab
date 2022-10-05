@@ -9,12 +9,13 @@
 
 TRASH_SYMBS             [ \t\r\n\v]+
 DIGIT                   [0-9]
-DIGIT1                  [1-9]
-WORD                    ("-"|",")
+SEPARATOR               ("-"|",")
+ALPHA                   [a-zA-Z]
+WORD                    ({ALPHA}|"_"|{DIGIT})({ALPHA}|{DIGIT}|"_")*
 
 %%
-{WORD}                    {               }
+{SEPARATOR}             {               }
 {TRASH_SYMBS}           {   /*skip*/    }
 
-{DIGIT1}{DIGIT}*        {   return pushNumber(yytext);  }
+{WORD}                  {  return pushData(yytext);}
 %%

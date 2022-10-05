@@ -80,8 +80,9 @@ namespace AST {
         }
 
         std::vector<Node *>::const_iterator childBegin () const { return children_.cbegin (); }
-
         std::vector<Node *>::const_iterator childEnd () const { return children_.cend (); }
+        std::vector<Node *>::reverse_iterator rChildBegin () { return children_.rbegin (); }
+        std::vector<Node *>::reverse_iterator rChildEnd () { return children_.rend (); }
 
         Node *getLeftChild () const;
 

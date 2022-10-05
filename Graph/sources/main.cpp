@@ -11,16 +11,25 @@
 
 int main () try {
 
-    std::cout << "\t---Hello, graph!" << std::endl;
+    //std::cout << "\t---Hello, graph!" << std::endl;
 
-    auto lexer = std::make_unique<GraphLexer>();
-    std::cout << "Handle the graph's represenatation..." << std::endl;
-    while(lexer->yylex() != 0) {
+    // auto graphLexer = std::make_unique<GraphLexer>();
+    // //std::cout << "Handle the graph's represenatation..." << std::endl;
+    // while(graphLexer->yylex() != 0) {
         
-    }
+    // }
 
-    Combinatorics::KnuthsGraph<int, int> graph{{{1, 2}, {1, 3}, {2, 3}, {2, 4}, {3, 4}}, {1, 2, 3}, {1, 4, 3}}; 
+    // std::cout << graphLexer->data_.size() << std::endl;
+    // for (auto v : graphLexer->data_) {
+
+    //     std::cout << v << std::endl;
+    // }
+
+    Combinatorics::KnuthsGraph graph{{1,2}, {3,4}, {6,5}};
+#if 0
+    auto graph = Combinatorics::readGraph();
     graph.dump();
+    //graph.checkBipartite();
     auto res = graph.checkBipartite();
     if (res.first) {
 
@@ -39,6 +48,10 @@ int main () try {
         
         std::cout << "Graph is not bipartite!" << std::endl;
     }
+
+    Combinatorics::KnuthsGraph<std::string, int> graph{{{1, 2}, {1, 3}, {2, 3}, {2, 4}, {3, 4}}, {"Tommy", "Bob", "Frank", "DennisRedis"}, {1, 4, 3, 6, 7}}; 
+    graph.dump();
+#endif
 }
 catch (std::exception &err) {
 
